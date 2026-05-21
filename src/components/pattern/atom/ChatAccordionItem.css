@@ -1,0 +1,162 @@
+.accordion-item {
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+
+.accordion-item.open {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(14, 116, 144, 0.13);
+  border-color: rgba(14, 165, 233, 0.42);
+}
+
+.accordion-header {
+  display: flex;
+  align-items: stretch;
+}
+
+.accordion-trigger {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.95rem 1.05rem;
+  background: none;
+  border: none;
+  border-radius: 0;
+  color: #0f172a;
+  cursor: pointer;
+  text-align: left;
+}
+
+.accordion-trigger:hover {
+  background: rgba(226, 232, 240, 0.34);
+}
+
+.accordion-index {
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #0c4a6e;
+  background: linear-gradient(135deg, #dbeafe, #cffafe);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: 999px;
+  padding: 0.2rem 0.58rem;
+}
+
+.accordion-question {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accordion-status-badge {
+  flex-shrink: 0;
+  font-size: 0.73rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.18rem 0.56rem;
+  border: 1px solid transparent;
+}
+
+.accordion-status-badge.completed {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.accordion-status-badge.stopped {
+  color: #9a3412;
+  background: #ffedd5;
+  border-color: #fdba74;
+}
+
+.accordion-icon {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.accordion-delete-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  background: none;
+  border: none;
+  border-left: 1px solid transparent;
+  cursor: pointer;
+  color: #cbd5e1;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  border-radius: 0 16px 0 0;
+}
+
+.accordion-item:hover .accordion-delete-btn {
+  opacity: 1;
+  border-left-color: rgba(203, 213, 225, 0.45);
+}
+
+.accordion-delete-btn:hover {
+  background: #fff1f2;
+  color: #ef4444;
+  border-left-color: #fecaca;
+}
+
+.accordion-body {
+  border-top: 1px solid rgba(203, 213, 225, 0.75);
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.6rem;
+}
+
+.accordion-user,
+.accordion-assistant {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+}
+
+.accordion-user {
+  background: linear-gradient(180deg, #eff6ff, #eef2ff);
+}
+
+.accordion-assistant {
+  background: linear-gradient(180deg, #ecfeff, #e6fffb);
+}
+
+.accordion-label {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.16rem 0.58rem;
+  margin-bottom: 0.48rem;
+}
+
+.user-label {
+  color: #1e3a8a;
+  background: #dbeafe;
+}
+
+.ai-label {
+  color: #155e75;
+  background: #ccfbf1;
+}
+
+.accordion-user p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  color: #0f172a;
+}

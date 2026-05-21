@@ -1,0 +1,44 @@
+.spinner-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+}
+
+.spinner-lottie {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.spinner-text {
+  display: inline-flex;
+  flex-wrap: wrap;
+  font-size: 1rem;
+  color: #475569;
+}
+
+.spinner-text-char {
+  display: inline-block;
+  animation: text-wave 1.8s ease-in-out infinite;
+  will-change: transform, color;
+}
+
+@keyframes text-wave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    color: #475569;
+  }
+
+  30% {
+    transform: translateY(-2.5px);
+    color: #0f766e;
+  }
+}
