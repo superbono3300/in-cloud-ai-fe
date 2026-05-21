@@ -11,6 +11,7 @@ import { ErrorMessage } from '../components/pattern/atom/ErrorMessage'
 import { EmptyState } from '../components/pattern/atom/EmptyState'
 import { LoadingSpinner } from '../components/pattern/atom/LoadingSpinner'
 import { ChatAccordionItem } from '../components/pattern/atom/ChatAccordionItem'
+import { ConfirmDialog } from '../components/pattern/molecule/ConfirmDialog'
 import LottieRobot from '../components/pattern/atom/LottieRobot'
 
 type QAPair = {
@@ -39,6 +40,7 @@ export function ChatPage() {
   const [input, setInput] = useState('간단한 React 컴포넌트 예제를 보여줘.')
   const [stoppedPairIndexes, setStoppedPairIndexes] = useState<number[]>([])
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [showStopConfirm, setShowStopConfirm] = useState(false)
 
   const selectedModel = MODELS[selectedModelIndex]
   const { messages, loading, error, sendMessage, stopGeneration, deletePair } = useChat(selectedModel, { systemPrompt })
@@ -56,6 +58,20 @@ export function ChatPage() {
     }
 
     stopGeneration()
+  }
+
+  const handleStopClick = () => {
+    if (!loading) return
+    setShowStopConfirm(true)
+  }
+
+  const handleStopCancel = () => {
+    setShowStopConfirm(false)
+  }
+
+  const handleStopConfirm = () => {
+    setShowStopConfirm(false)
+    handleStop()
   }
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
@@ -112,7 +128,7 @@ export function ChatPage() {
           onChange={setInput}
         />
 
-        <SubmitButton disabled={!canSend} loading={loading} onStop={handleStop} />
+        <SubmitButton disabled={!canSend} loading={loading} onStop={handleStopClick} />
       </form>
 
       {error && <ErrorMessage message={error} />}
@@ -156,6 +172,16 @@ export function ChatPage() {
       >
         ↑
       </button>
+
+      <ConfirmDialog
+        open={showStopConfirm}
+        title="답변 생성을 중지할까요?"
+        description="중지하면 현재 생성 중인 답변을 끝까지 받지 못할 수 있습니다."
+        confirmText="중지"
+        cancelText="계속 생성"
+        onConfirm={handleStopConfirm}
+        onCancel={handleStopCancel}
+      />
     </main>
   )
 }
