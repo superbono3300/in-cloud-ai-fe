@@ -12,6 +12,8 @@ import { EmptyState } from '../components/pattern/atom/EmptyState'
 import { LoadingSpinner } from '../components/pattern/atom/LoadingSpinner'
 import { ChatAccordionItem } from '../components/pattern/atom/ChatAccordionItem'
 import { ConfirmDialog } from '../components/pattern/molecule/ConfirmDialog'
+import { ImageAttachment } from '../components/pattern/molecule/ImageAttachment'
+import { ImagePreviewModal } from '../components/pattern/molecule/ImagePreviewModal'
 import LottieRobot from '../components/pattern/atom/LottieRobot'
 
 type QAPair = {
@@ -41,6 +43,9 @@ export function ChatPage() {
   const [stoppedPairIndexes, setStoppedPairIndexes] = useState<number[]>([])
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
+  // 이미지 첨부 및 미리보기 상태
+  const [attachedImages, setAttachedImages] = useState<File[]>([])
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const selectedModel = MODELS[selectedModelIndex]
   const { messages, loading, error, sendMessage, stopGeneration, deletePair } = useChat(selectedModel, { systemPrompt })
@@ -78,9 +83,10 @@ export function ChatPage() {
     event.preventDefault()
     const userMessage = input.trim()
     if (!userMessage || loading) return
-
+    // TODO: 이미지 첨부 전송 로직 필요 (API 연동 시)
     await sendMessage(userMessage)
     setInput('')
+    setAttachedImages([])
   }
 
   useEffect(() => {
@@ -111,21 +117,24 @@ export function ChatPage() {
       </header>
 
       <form className="chat-form" onSubmit={handleSubmit}>
-        <div className="grid-row">
+        <div>
           <ModelSelector
             value={selectedModelIndex}
             onChange={setSelectedModelIndex}
             models={MODELS}
           />
-          {/* <SystemPromptInput
-            value={systemPrompt}
-            onChange={setSystemPrompt}
-          /> */}
         </div>
 
         <MessageInput
           value={input}
           onChange={setInput}
+        />
+
+        {/* 이미지 첨부 UI */}
+        <ImageAttachment
+          files={attachedImages}
+          onFilesChange={setAttachedImages}
+          onPreview={setPreviewUrl}
         />
 
         <SubmitButton disabled={!canSend} loading={loading} onStop={handleStopClick} />
@@ -182,6 +191,9 @@ export function ChatPage() {
         onConfirm={handleStopConfirm}
         onCancel={handleStopCancel}
       />
+
+      {/* 이미지 미리보기 모달 */}
+      <ImagePreviewModal url={previewUrl} onClose={() => setPreviewUrl(null)} />
     </main>
   )
 }

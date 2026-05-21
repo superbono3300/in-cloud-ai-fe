@@ -1,0 +1,50 @@
+.image-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+}
+
+.image-preview-modal {
+  position: relative;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.24);
+  padding: 1.1rem 1.1rem 1rem;
+  max-width: 92vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.image-preview-modal img {
+  max-width: 70vw;
+  max-height: 70vh;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(14, 165, 233, 0.13);
+}
+
+.image-preview-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  background: #f87171;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(220,38,38,0.13);
+  opacity: 0.85;
+  transition: background 0.15s;
+}
+
+.image-preview-close:hover {
+  background: #dc2626;
+}

@@ -108,7 +108,7 @@ button {
   min-height: 100px;
 }
 
-.chat-form button {
+.chat-form .chat-submit-button {
   justify-self: end;
   border: 1px solid transparent;
   border-radius: 15px;
@@ -123,21 +123,21 @@ button {
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
-.chat-form button:hover {
+.chat-form .chat-submit-button:hover {
   transform: translateY(-1px);
   filter: saturate(1.07);
 }
 
-.chat-form button.stop-button {
+.chat-form .chat-submit-button.stop-button {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   box-shadow: 0 12px 24px rgba(220, 38, 38, 0.26);
 }
 
-.chat-form button.stop-button:hover {
+.chat-form .chat-submit-button.stop-button:hover {
   filter: saturate(1.08);
 }
 
-.chat-form button:disabled {
+.chat-form .chat-submit-button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
   transform: none;
@@ -214,7 +214,7 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .chat-form button {
+  .chat-form .chat-submit-button {
     width: 100%;
     justify-self: stretch;
   }
