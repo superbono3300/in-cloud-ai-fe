@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
+import rehypeHighlight from 'rehype-highlight'
 import remarkGfm from 'remark-gfm'
 import './MarkdownAnswer.css'
 
@@ -8,16 +10,38 @@ type MarkdownAnswerProps = {
 }
 
 type CodeBlockProps = {
-  code: string
+  code: ReactNode
+  rawCode: string
   language: string
+  className?: string
 }
 
-function CodeBlock({ code, language }: CodeBlockProps) {
+function extractText(node: ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') {
+    return String(node)
+  }
+
+  if (!node) {
+    return ''
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(extractText).join('')
+  }
+
+  if (typeof node === 'object' && 'props' in node) {
+    return extractText((node as { props?: { children?: ReactNode } }).props?.children)
+  }
+
+  return ''
+}
+
+function CodeBlock({ code, rawCode, language, className }: CodeBlockProps) {
   const [copied, setCopied] = useState(false)
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(code)
+      await navigator.clipboard.writeText(rawCode)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1200)
     } catch {
@@ -39,7 +63,7 @@ function CodeBlock({ code, language }: CodeBlockProps) {
         </button>
       </div>
       <pre>
-        <code>{code}</code>
+        <code className={className}>{code}</code>
       </pre>
     </div>
   )
@@ -50,9 +74,10 @@ export function MarkdownAnswer({ content }: MarkdownAnswerProps) {
     <div className="markdown-answer">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
         components={{
           code({ className, children }) {
-            const text = String(children ?? '').replace(/\n$/, '')
+            const text = extractText(children).replace(/\n$/, '')
             const language = className?.replace('language-', '') ?? ''
             const isBlock = Boolean(className?.includes('language-')) || text.includes('\n')
 
@@ -60,7 +85,7 @@ export function MarkdownAnswer({ content }: MarkdownAnswerProps) {
               return <code className="markdown-inline-code">{children}</code>
             }
 
-            return <CodeBlock code={text} language={language} />
+            return <CodeBlock code={children} rawCode={text} language={language} className={className} />
           },
         }}
       >

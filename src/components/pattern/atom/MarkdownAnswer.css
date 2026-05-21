@@ -116,6 +116,50 @@
   background: transparent;
 }
 
+.markdown-codeblock code.hljs {
+  color: #d4d4d4;
+}
+
+.markdown-codeblock .hljs-keyword,
+.markdown-codeblock .hljs-selector-tag,
+.markdown-codeblock .hljs-literal,
+.markdown-codeblock .hljs-name {
+  color: #569cd6;
+}
+
+.markdown-codeblock .hljs-title,
+.markdown-codeblock .hljs-section,
+.markdown-codeblock .hljs-function,
+.markdown-codeblock .hljs-built_in,
+.markdown-codeblock .hljs-title.class_ {
+  color: #dcdcaa;
+}
+
+.markdown-codeblock .hljs-string,
+.markdown-codeblock .hljs-meta .hljs-string,
+.markdown-codeblock .hljs-attr {
+  color: #ce9178;
+}
+
+.markdown-codeblock .hljs-number,
+.markdown-codeblock .hljs-symbol,
+.markdown-codeblock .hljs-bullet,
+.markdown-codeblock .hljs-variable,
+.markdown-codeblock .hljs-template-variable {
+  color: #b5cea8;
+}
+
+.markdown-codeblock .hljs-comment,
+.markdown-codeblock .hljs-quote,
+.markdown-codeblock .hljs-doctag {
+  color: #6a9955;
+}
+
+.markdown-codeblock .hljs-operator,
+.markdown-codeblock .hljs-punctuation {
+  color: #d4d4d4;
+}
+
 .markdown-answer table {
   width: 100%;
   border-collapse: collapse;
