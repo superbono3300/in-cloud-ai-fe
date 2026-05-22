@@ -15,6 +15,12 @@
   gap: 0.9rem;
 }
 
+.app-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
 .app-header-title-row {
   display: inline-flex;
   align-items: center;
@@ -56,13 +62,52 @@
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  box-shadow: var(--toggle-shadow);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--toggle-text) 12%, transparent);
   cursor: pointer;
   transition: transform 0.16s ease, background 0.18s ease, border-color 0.18s ease;
 }
 
+.header-guide-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  border: 1px solid var(--toggle-border);
+  border-radius: 999px;
+  background: var(--toggle-bg);
+  color: var(--toggle-text);
+  padding: 0.45rem 0.82rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--toggle-text) 12%, transparent);
+  cursor: pointer;
+  transition: transform 0.16s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.header-guide-button:hover,
 .theme-toggle-button:hover {
   transform: translateY(-1px);
+}
+
+.header-guide-button:focus-visible,
+.theme-toggle-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--focus-ring);
+}
+
+.header-guide-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--focus-border) 18%, transparent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .theme-toggle-icon {
@@ -443,6 +488,12 @@ button {
     padding: 0.35rem 0.55rem 0.35rem 0.22rem;
   }
 
+  .app-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .header-guide-button,
   .theme-toggle-button {
     padding: 0.38rem 0.64rem;
     font-size: 0.76rem;

@@ -101,6 +101,11 @@ function markOnboardingSeen(): void {
 
 const PROMPT_PRESETS = [
   {
+    id: 'direct',
+    label: '직접입력',
+    text: '',
+  },
+  {
     id: 'summary',
     label: '요약형',
     text: `아래 내용을 실무 보고용으로 정리해줘.
@@ -219,7 +224,7 @@ export function ChatPage() {
     return Math.min(Math.max(savedIndex, 0), MODELS.length - 1)
   })
   const [systemPrompt] = useState('당신은 아이엔소프트 AI 도우미입니다.')
-  const [input, setInput] = useState('간단한 React 컴포넌트 예제를 보여줘.')
+  const [input, setInput] = useState('')
   const [stoppedPairIndexes, setStoppedPairIndexes] = useState<number[]>(() => persistedChatState?.stoppedPairIndexes ?? [])
   const [pinnedPairIndexes, setPinnedPairIndexes] = useState<number[]>(() => persistedChatState?.pinnedPairIndexes ?? [])
   const [ratings, setRatings] = useState<Record<number, PairRating>>(() => persistedChatState?.ratings ?? {})
@@ -335,7 +340,13 @@ export function ChatPage() {
   const handleApplyPreset = () => {
     const preset = PROMPT_PRESETS.find((item) => item.id === selectedPresetId)
     if (!preset) return
-    setInput(preset.text)
+
+    const nextInputValue = preset.id === 'direct' ? '' : preset.text
+    setInput('')
+
+    requestAnimationFrame(() => {
+      setInput(nextInputValue)
+    })
   }
 
   const handleCloseOnboarding = () => {
@@ -564,16 +575,28 @@ export function ChatPage() {
             <LottieRobot size={68} />
             <h1>IN Cloud AI Gateway</h1>
           </div>
-          <button
-            type="button"
-            className="theme-toggle-button"
-            onClick={handleThemeToggle}
-            aria-label={theme === 'light' ? '다크 모드로 전환' : '라이트 모드로 전환'}
-            title={theme === 'light' ? '다크 모드' : '라이트 모드'}
-          >
-            <span className="theme-toggle-icon" aria-hidden="true">{theme === 'light' ? '🌙' : '☀️'}</span>
-            <span>{theme === 'light' ? '다크 모드' : '라이트 모드'}</span>
-          </button>
+          <div className="app-header-actions">
+            <button
+              type="button"
+              className="header-guide-button"
+              onClick={() => setShowOnboarding(true)}
+              aria-label="온보딩 가이드 보기"
+              title="온보딩 가이드 보기"
+            >
+              <span className="header-guide-icon" aria-hidden="true">?</span>
+              <span>가이드 보기</span>
+            </button>
+            <button
+              type="button"
+              className="theme-toggle-button"
+              onClick={handleThemeToggle}
+              aria-label={theme === 'light' ? '다크 모드로 전환' : '라이트 모드로 전환'}
+              title={theme === 'light' ? '다크 모드' : '라이트 모드'}
+            >
+              <span className="theme-toggle-icon" aria-hidden="true">{theme === 'light' ? '🌙' : '☀️'}</span>
+              <span>{theme === 'light' ? '다크 모드' : '라이트 모드'}</span>
+            </button>
+          </div>
         </div>
         {/* <p>빠르고 안정적인 사내 AI 질의 도우미</p> */}
       </header>
