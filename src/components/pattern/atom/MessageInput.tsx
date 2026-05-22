@@ -8,6 +8,7 @@ export function MessageInput({ value, onChange }: MessageInputProps) {
     <label>
       사용자 메시지
       <textarea
+        style={{ minHeight: '350px' }}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {

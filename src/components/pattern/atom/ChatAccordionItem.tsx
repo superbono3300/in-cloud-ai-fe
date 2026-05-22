@@ -29,15 +29,15 @@ export function ChatAccordionItem({
   onDelete,
   onResume,
   resumeDisabled = false,
-  // isPinned = false,
-  onTogglePin,
-  // rating,
   onRate,
   onRegenerate,
   regenerateDisabled = false,
   responseTime,
 }: ChatAccordionItemProps) {
   const [open, setOpen] = useState(defaultOpen)
+  const canQuickResume = status === 'stopped' && Boolean(onResume)
+  const hasStatusBadge = status === 'completed' || canQuickResume
+  const hasActions = Boolean(onDelete || hasStatusBadge)
 
   return (
     <div className={`accordion-item ${open ? 'open' : ''}`}>
@@ -50,46 +50,37 @@ export function ChatAccordionItem({
         >
           <span className="accordion-index">Q{index}</span>
           <span className="accordion-question">{question}</span>
-            {/* {onTogglePin && (
-              <button
-                type="button"
-                className={`accordion-pin-btn ${isPinned ? 'active' : ''}`}
-                onClick={onTogglePin}
-                title={isPinned ? '핀 해제' : '핀 고정'}
-                aria-label={isPinned ? '핀 해제' : '핀 고정'}
-              >
-                📌
-              </button>
-            )} */}
-          {status && (
-            <span className={`accordion-status-badge ${status}`}>
-              {status === 'completed' ? '답변완료' : '중지함'}
-            </span>
-          )}
         </button>
-        {(onDelete || onTogglePin || (status === 'stopped' && onResume)) && (
+
+        {hasActions && (
           <div className="accordion-actions">
-            {status === 'stopped' && onResume && (
-              <button
-                type="button"
-                className="accordion-resume-btn"
-                onClick={onResume}
-                disabled={resumeDisabled}
-                title="중지된 답변 재개"
-                aria-label="중지된 답변 재개"
+            {canQuickResume && (
+              <span
+                role="button"
+                tabIndex={resumeDisabled ? -1 : 0}
+                className={`accordion-status-badge stopped accordion-status-action ${resumeDisabled ? 'disabled' : ''}`}
+                onClick={() => {
+                  if (!resumeDisabled && onResume) {
+                    onResume()
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (resumeDisabled || !onResume) return
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onResume()
+                  }
+                }}
+                aria-disabled={resumeDisabled}
+                aria-label={resumeDisabled ? '요청중' : '중지된 답변 재개'}
+                title={resumeDisabled ? '요청중' : '클릭하여 재개'}
               >
-                재개
-              </button>
+                {resumeDisabled ? '요청중' : '중지함'}
+              </span>
             )}
-            <button
-              type="button"
-              className="accordion-toggle-btn"
-              onClick={() => setOpen((prev) => !prev)}
-              aria-label={open ? '접기' : '펼치기'}
-              title={open ? '접기' : '펼치기'}
-            >
-              <span className="accordion-icon">{open ? '▲' : '▼'}</span>
-            </button>
+            {status === 'completed' && !canQuickResume && (
+              <span className="accordion-status-badge completed">답변완료</span>
+            )}
             {onDelete && (
               <button
                 type="button"
@@ -101,9 +92,19 @@ export function ChatAccordionItem({
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
               </button>
             )}
+            <button
+              type="button"
+              className="accordion-toggle-btn"
+              onClick={() => setOpen((prev) => !prev)}
+              aria-label={open ? '접기' : '펼치기'}
+              title={open ? '접기' : '펼치기'}
+            >
+              <span className="accordion-icon">{open ? '▲' : '▼'}</span>
+            </button>
           </div>
         )}
-        {!onDelete && !(status === 'stopped' && onResume) && (
+
+        {!hasActions && (
           <button
             type="button"
             className="accordion-toggle-btn"
