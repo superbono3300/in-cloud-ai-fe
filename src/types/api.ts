@@ -1,3 +1,5 @@
+import type { ChatMessage } from './chat'
+
 /**
  * 챗 API 모델 설정 타입
  */
@@ -25,7 +27,7 @@ export type ModelConfig = {
  */
 export interface UseChatOptions {
   systemPrompt?: string
-  initialMessages?: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
+  initialMessages?: ChatMessage[]
 }
 
 /**

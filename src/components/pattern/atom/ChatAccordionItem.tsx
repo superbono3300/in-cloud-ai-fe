@@ -12,6 +12,7 @@ type ChatAccordionItemProps = {
   onDelete?: () => void
   onResume?: () => void
   resumeDisabled?: boolean
+  resumeLoading?: boolean
   isPinned?: boolean
   onTogglePin?: () => void
   rating?: 'up' | 'down'
@@ -32,6 +33,7 @@ export function ChatAccordionItem({
   onDelete,
   onResume,
   resumeDisabled = false,
+  resumeLoading = false,
   onRate,
   onRegenerate,
   regenerateDisabled = false,
@@ -112,10 +114,10 @@ export function ChatAccordionItem({
                   }
                 }}
                 aria-disabled={resumeDisabled}
-                aria-label={resumeDisabled ? '요청중' : '중지된 답변 재개'}
-                title={resumeDisabled ? '요청중' : '클릭하여 재개'}
+                aria-label={resumeLoading ? '요청중' : '중지된 답변 재개'}
+                title={resumeLoading ? '요청중' : '클릭하여 재개'}
               >
-                {resumeDisabled ? '요청중' : '중지함'}
+                {resumeLoading ? '요청중' : '중지함'}
               </span>
             )}
             {status === 'completed' && !canQuickResume && (

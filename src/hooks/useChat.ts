@@ -19,6 +19,28 @@ type ChatCompletionRequestMessage = {
   content: string | ChatCompletionContentPart[]
 }
 
+function toRequestMessage(message: ChatMessage): ChatCompletionRequestMessage {
+  if (message.role !== 'user' || !message.imageUrls || message.imageUrls.length === 0) {
+    return { role: message.role, content: message.content }
+  }
+
+  const normalizedText = message.content.trim()
+  const includeTextPart = normalizedText.length > 0 && normalizedText !== '(이미지 첨부)'
+
+  const content: ChatCompletionContentPart[] = [
+    ...(includeTextPart ? [{ type: 'text' as const, text: normalizedText }] : []),
+    ...message.imageUrls.map((url) => ({
+      type: 'image_url' as const,
+      image_url: { url },
+    })),
+  ]
+
+  return {
+    role: 'user',
+    content,
+  }
+}
+
 const SUPPORTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 function fileToDataUrl(file: File): Promise<string> {
@@ -66,8 +88,7 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
 
       const baseMessages = buildBaseMessages()
       const displayMessage = normalizedMessage || '(이미지 첨부)'
-
-      setMessages((prev) => [...prev, { role: 'user', content: displayMessage }])
+      const validImages = images.filter((file) => SUPPORTED_IMAGE_TYPES.has(file.type))
       setError('')
       setStopped(false)
       setLoading(true)
@@ -76,8 +97,9 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
       controllerRef.current = controller
 
       try {
-        const validImages = images.filter((file) => SUPPORTED_IMAGE_TYPES.has(file.type))
         const imageDataUrls = await Promise.all(validImages.map(fileToDataUrl))
+
+        setMessages((prev) => [...prev, { role: 'user', content: displayMessage, imageUrls: imageDataUrls }])
 
         const userContent: string | ChatCompletionContentPart[] =
           imageDataUrls.length === 0
@@ -98,8 +120,8 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
               ]
 
         const requestMessages: ChatCompletionRequestMessage[] = [
-          ...baseMessages,
-          ...messages,
+          ...baseMessages.map(toRequestMessage),
+          ...messages.map(toRequestMessage),
           { role: 'user', content: userContent },
         ]
 
@@ -178,8 +200,8 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
 
       try {
         const requestMessages = [
-          ...buildBaseMessages(),
-          ...messages.slice(0, targetUserMessageIndex + 1),
+          ...buildBaseMessages().map(toRequestMessage),
+          ...messages.slice(0, targetUserMessageIndex + 1).map(toRequestMessage),
         ]
 
         const response = await axiosInstance.post('/chat/completions', {
