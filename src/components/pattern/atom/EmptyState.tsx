@@ -10,7 +10,7 @@ export function EmptyState() {
     let animation: ReturnType<typeof lottie.loadAnimation> | null = null
     let disposed = false
 
-    fetch('/lottie/Empty-Search.json')
+    fetch('/lottie/Question-mark.json')
       .then((response) => {
         if (!response.ok) {
           throw new Error('Failed to load Lottie JSON')
