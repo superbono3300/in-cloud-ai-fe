@@ -278,6 +278,14 @@ export function ChatPage() {
     () => [...pairs].map((pair, pairIndex) => ({ ...pair, pairIndex })).reverse(),
     [pairs],
   )
+  const completedPairCount = useMemo(
+    () => pairs.filter((pair) => Boolean(pair.answer)).length,
+    [pairs],
+  )
+  const stoppedPairCount = useMemo(
+    () => stoppedPairIndexes.filter((pairIndex) => !pairs[pairIndex]?.answer).length,
+    [pairs, stoppedPairIndexes],
+  )
 
   const buildMarkdownExport = (): string => {
     const lines: string[] = ['# IN Cloud AI Gateway Export', '']
@@ -654,6 +662,19 @@ export function ChatPage() {
                 </button>
               ))
             )}
+          </div>
+
+          <div className="app-sidebar-summary" aria-label="대화 상태 요약">
+            <div className="app-sidebar-summary-card completed">
+              <span className="app-sidebar-summary-label">답변완료</span>
+              <strong className="app-sidebar-summary-value">{completedPairCount}</strong>
+              <span className="app-sidebar-summary-unit">건</span>
+            </div>
+            <div className="app-sidebar-summary-card stopped">
+              <span className="app-sidebar-summary-label">중지함</span>
+              <strong className="app-sidebar-summary-value">{stoppedPairCount}</strong>
+              <span className="app-sidebar-summary-unit">건</span>
+            </div>
           </div>
         </aside>
 
