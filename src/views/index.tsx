@@ -100,6 +100,8 @@ export function ChatPage() {
   const [selectedPresetId, setSelectedPresetId] = useState<(typeof PROMPT_PRESETS)[number]['id']>(PROMPT_PRESETS[0].id)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [pendingDeletePairIndex, setPendingDeletePairIndex] = useState<number | null>(null)
   // 이미지 첨부 및 미리보기 상태
   const [attachedImages, setAttachedImages] = useState<File[]>([])
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -257,6 +259,26 @@ export function ChatPage() {
       })
       return next
     })
+  }
+
+  const handleDeleteClick = (pairIndex: number) => {
+    setPendingDeletePairIndex(pairIndex)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false)
+    setPendingDeletePairIndex(null)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (pendingDeletePairIndex === null) {
+      handleDeleteCancel()
+      return
+    }
+
+    handleDeletePair(pendingDeletePairIndex)
+    handleDeleteCancel()
   }
 
   const handleTogglePin = (pairIndex: number) => {
@@ -460,7 +482,7 @@ export function ChatPage() {
                     : undefined
               }
               defaultOpen={originalIndex === pairs.length - 1}
-              onDelete={() => handleDeletePair(originalIndex)}
+              onDelete={() => handleDeleteClick(originalIndex)}
               onResume={() => { void handleResume(originalIndex) }}
               resumeDisabled={loading}
               isPinned={pinnedPairIndexes.includes(originalIndex)}
@@ -492,6 +514,16 @@ export function ChatPage() {
         cancelText="계속 생성"
         onConfirm={handleStopConfirm}
         onCancel={handleStopCancel}
+      />
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="이 대화를 삭제할까요?"
+        description="삭제하면 복구할 수 없습니다."
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
       />
 
       {/* 이미지 미리보기 모달 */}
