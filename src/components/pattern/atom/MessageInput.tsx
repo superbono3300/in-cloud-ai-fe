@@ -10,6 +10,14 @@ export function MessageInput({ value, onChange }: MessageInputProps) {
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' || event.shiftKey) {
+            return
+          }
+
+          event.preventDefault()
+          event.currentTarget.form?.requestSubmit()
+        }}
         rows={4}
         placeholder="질문을 입력하세요"
       />
