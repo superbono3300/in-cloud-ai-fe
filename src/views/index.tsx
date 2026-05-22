@@ -233,6 +233,7 @@ export function ChatPage() {
   const [selectedPresetId, setSelectedPresetId] = useState<(typeof PROMPT_PRESETS)[number]['id']>(
     () => persistedChatState?.selectedPresetId ?? PROMPT_PRESETS[0].id,
   )
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null)
@@ -271,6 +272,10 @@ export function ChatPage() {
 
     return filtered.sort((a, b) => Number(pinnedSet.has(b.pairIndex)) - Number(pinnedSet.has(a.pairIndex)))
   }, [pairs, pinnedPairIndexes, searchQuery])
+  const sidebarPairs = useMemo(
+    () => [...pairs].map((pair, pairIndex) => ({ ...pair, pairIndex })).reverse(),
+    [pairs],
+  )
 
   const buildMarkdownExport = (): string => {
     const lines: string[] = ['# IN Cloud AI Gateway Export', '']
@@ -556,18 +561,101 @@ export function ChatPage() {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
   }
 
+  const handleSidebarToggle = () => {
+    setIsSidebarOpen((prev) => !prev)
+  }
+
+  const handleSidebarCompose = () => {
+    setInput('')
+    setSearchQuery('')
+    setSelectedPresetId('direct')
+    setIsSidebarOpen(false)
+
+    requestAnimationFrame(() => {
+      messageInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      messageInputRef.current?.focus()
+    })
+  }
+
+  const handleSidebarJump = (pairIndex: number) => {
+    setSearchQuery('')
+    setIsSidebarOpen(false)
+
+    requestAnimationFrame(() => {
+      document.getElementById(`chat-card-${pairIndex}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
   }, [theme])
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell ${isSidebarOpen ? 'sidebar-open' : ''}`}>
       <OnboardingModal
         open={showOnboarding}
         onClose={handleCloseOnboarding}
         onStart={handleStartOnboarding}
       />
+
+      <div className="app-layout">
+        <aside className={`app-sidebar ${isSidebarOpen ? 'open' : ''}`} aria-hidden={!isSidebarOpen}>
+          <div className="app-sidebar-head">
+            <div>
+              <strong>대화 패널</strong>
+              <p>{pairs.length}개의 질문 흐름</p>
+            </div>
+            <button
+              type="button"
+              className="app-sidebar-close"
+              onClick={handleSidebarToggle}
+              aria-label="사이드패널 닫기"
+              title="사이드패널 닫기"
+            >
+              ×
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="app-sidebar-primary"
+            onClick={handleSidebarCompose}
+          >
+            새 질문 작성
+          </button>
+
+          <label className="app-sidebar-search-block">
+            <span>대화 검색</span>
+            <input
+              type="search"
+              className="app-sidebar-search-input"
+              placeholder="질문 키워드 찾기"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
+          </label>
+
+          <div className="app-sidebar-list">
+            {sidebarPairs.length === 0 ? (
+              <p className="app-sidebar-empty">아직 대화가 없습니다.</p>
+            ) : (
+              sidebarPairs.map((pair) => (
+                <button
+                  key={pair.pairIndex}
+                  type="button"
+                  className="app-sidebar-item"
+                  onClick={() => handleSidebarJump(pair.pairIndex)}
+                >
+                  <span className="app-sidebar-item-index">Q{pair.pairIndex + 1}</span>
+                  <span className="app-sidebar-item-text">{pair.question}</span>
+                </button>
+              ))
+            )}
+          </div>
+        </aside>
+
+        <div className="app-main">
 
       <header className="app-header">
         <div className="app-header-top-row">
@@ -576,6 +664,16 @@ export function ChatPage() {
             <h1>IN Cloud AI Gateway</h1>
           </div>
           <div className="app-header-actions">
+            <button
+              type="button"
+              className={`header-sidebar-button ${isSidebarOpen ? 'active' : ''}`}
+              onClick={handleSidebarToggle}
+              aria-label={isSidebarOpen ? '사이드패널 닫기' : '사이드패널 열기'}
+              title={isSidebarOpen ? '사이드패널 닫기' : '사이드패널 열기'}
+            >
+              <span className="header-sidebar-icon" aria-hidden="true">☰</span>
+              <span>대화 패널</span>
+            </button>
             <button
               type="button"
               className="header-guide-button"
@@ -674,6 +772,7 @@ export function ChatPage() {
           return (
             <ChatAccordionItem
               key={originalIndex}
+              domId={`chat-card-${originalIndex}`}
               index={originalIndex + 1}
               question={pair.question}
               answer={pair.answer}
@@ -732,6 +831,8 @@ export function ChatPage() {
 
       {/* 이미지 미리보기 모달 */}
       <ImagePreviewModal url={previewUrl} onClose={() => setPreviewUrl(null)} />
+        </div>
+      </div>
     </main>
   )
 }

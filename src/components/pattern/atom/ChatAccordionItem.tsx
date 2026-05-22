@@ -3,6 +3,7 @@ import './ChatAccordionItem.css'
 import { MarkdownAnswer } from './MarkdownAnswer'
 
 type ChatAccordionItemProps = {
+  domId?: string
   index: number
   question: string
   answer: string | null
@@ -22,6 +23,7 @@ type ChatAccordionItemProps = {
 }
 
 export function ChatAccordionItem({
+  domId,
   index,
   question,
   answer,
@@ -69,7 +71,7 @@ export function ChatAccordionItem({
   }
 
   return (
-    <div className={`accordion-item ${isOpen ? 'open' : ''} ${regenerateLoading ? 'regenerating' : ''}`}>
+    <div id={domId} className={`accordion-item ${isOpen ? 'open' : ''} ${regenerateLoading ? 'regenerating' : ''}`}>
       {regenerateLoading && (
         <div className="accordion-regenerating-overlay" aria-hidden="true">
           <span className="accordion-regenerating-chip">
