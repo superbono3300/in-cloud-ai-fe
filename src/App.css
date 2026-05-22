@@ -259,7 +259,7 @@ button {
   display: flex;
   align-items: center;
   gap: 0.9rem;
-  min-height: 400px;
+  min-height: 280px;
   justify-content: center;
 }
 
