@@ -627,7 +627,7 @@ export function ChatPage() {
             새 질문 작성
           </button>
 
-          <label className="app-sidebar-search-block">
+          {/* <label className="app-sidebar-search-block">
             <span>대화 검색</span>
             <input
               type="search"
@@ -636,7 +636,7 @@ export function ChatPage() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
             />
-          </label>
+          </label> */}
 
           <div className="app-sidebar-list">
             {sidebarPairs.length === 0 ? (
