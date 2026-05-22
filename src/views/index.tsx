@@ -254,6 +254,7 @@ export function ChatPage() {
   const [attachedImages, setAttachedImages] = useState<File[]>([])
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const messageInputRef = useRef<HTMLTextAreaElement | null>(null)
+  const themeTransitionTimeoutRef = useRef<number | null>(null)
 
   const selectedModel = MODELS[selectedModelIndex]
   const { messages, loading, error, sendMessage, resumePair, stopGeneration, deletePair } = useChat(selectedModel, {
@@ -582,6 +583,18 @@ export function ChatPage() {
   }
 
   const handleThemeToggle = () => {
+    const root = document.documentElement
+    root.classList.add('theme-switching')
+
+    if (themeTransitionTimeoutRef.current !== null) {
+      window.clearTimeout(themeTransitionTimeoutRef.current)
+    }
+
+    themeTransitionTimeoutRef.current = window.setTimeout(() => {
+      root.classList.remove('theme-switching')
+      themeTransitionTimeoutRef.current = null
+    }, 220)
+
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
   }
 
@@ -614,6 +627,15 @@ export function ChatPage() {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    return () => {
+      if (themeTransitionTimeoutRef.current !== null) {
+        window.clearTimeout(themeTransitionTimeoutRef.current)
+      }
+      document.documentElement.classList.remove('theme-switching')
+    }
+  }, [])
 
   return (
     <main className={`app-shell ${isSidebarOpen ? 'sidebar-open' : ''}`}>

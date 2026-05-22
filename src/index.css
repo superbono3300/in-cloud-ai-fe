@@ -133,3 +133,21 @@ body {
   background: var(--body-bg);
   background-attachment: fixed;
 }
+
+/* Smooth color and surface transitions only while toggling theme. */
+html.theme-switching,
+html.theme-switching body {
+  transition: background 220ms ease, color 220ms ease;
+}
+
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition:
+    color 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    fill 220ms ease,
+    stroke 220ms ease;
+}
