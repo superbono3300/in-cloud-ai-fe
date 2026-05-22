@@ -17,6 +17,7 @@ type ChatAccordionItemProps = {
   onRate?: (value: 'up' | 'down') => void
   onRegenerate?: () => void
   regenerateDisabled?: boolean
+  responseTime?: string
 }
 
 export function ChatAccordionItem({
@@ -34,6 +35,7 @@ export function ChatAccordionItem({
   onRate,
   onRegenerate,
   regenerateDisabled = false,
+  responseTime,
 }: ChatAccordionItemProps) {
   const [open, setOpen] = useState(defaultOpen)
 
@@ -122,7 +124,10 @@ export function ChatAccordionItem({
           </div>
           {answer && (
             <div className="accordion-assistant">
-              <span className="accordion-label ai-label">AI</span>
+              <div className="accordion-assistant-head">
+                <span className="accordion-label ai-label">AI</span>
+                {responseTime && <span className="accordion-response-time">{responseTime}</span>}
+              </div>
               <MarkdownAnswer content={answer} />
               {(onRate || onRegenerate) && (
                 <div className="accordion-assistant-actions">

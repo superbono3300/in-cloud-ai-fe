@@ -222,6 +222,25 @@
   margin-bottom: 0.48rem;
 }
 
+.accordion-assistant-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.48rem;
+}
+
+.accordion-assistant-head .accordion-label {
+  margin-bottom: 0;
+}
+
+.accordion-response-time {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #0f766e;
+  letter-spacing: 0.01em;
+}
+
 .user-label {
   color: #1e3a8a;
   background: #dbeafe;
@@ -366,6 +385,10 @@
 :root[data-theme='dark'] .ai-label {
   color: #99f6e4;
   background: rgba(6, 95, 70, 0.45);
+}
+
+:root[data-theme='dark'] .accordion-response-time {
+  color: #7dd3fc;
 }
 
 :root[data-theme='dark'] .accordion-user p {

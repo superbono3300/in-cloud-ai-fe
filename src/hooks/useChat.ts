@@ -62,7 +62,7 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
   const sendMessage = useCallback(
     async (userMessage: string, images: File[] = []) => {
       const normalizedMessage = userMessage.trim()
-      if ((!normalizedMessage && images.length === 0) || loading) return
+      if ((!normalizedMessage && images.length === 0) || loading) return false
 
       const baseMessages = buildBaseMessages()
       const displayMessage = normalizedMessage || '(이미지 첨부)'
@@ -126,16 +126,18 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
 
         setMessages((prev) => [...prev, { role: 'assistant', content: assistantMessage }])
         setStopped(false)
+        return true
       } catch (err) {
         if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
           setStopped(true)
           setError('')
-          return
+          return false
         }
 
         setStopped(false)
         const errorMessage = err instanceof Error ? err.message : '요청 처리 중 알 수 없는 오류가 발생했습니다.'
         setError(errorMessage)
+        return false
       } finally {
         if (controllerRef.current === controller) {
           controllerRef.current = null

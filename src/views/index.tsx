@@ -70,6 +70,16 @@ function groupMessages(messages: ChatMessage[]): QAPair[] {
   return pairs
 }
 
+function formatResponseTime(date = new Date()): string {
+  const yy = String(date.getFullYear()).slice(2)
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  const hh = String(date.getHours()).padStart(2, '0')
+  const min = String(date.getMinutes()).padStart(2, '0')
+  const ss = String(date.getSeconds()).padStart(2, '0')
+  return `${yy}.${mm}.${dd} ${hh}:${min}:${ss}`
+}
+
 export function ChatPage() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const savedTheme = localStorage.getItem('theme')
@@ -85,6 +95,7 @@ export function ChatPage() {
   const [stoppedPairIndexes, setStoppedPairIndexes] = useState<number[]>([])
   const [pinnedPairIndexes, setPinnedPairIndexes] = useState<number[]>([])
   const [ratings, setRatings] = useState<Record<number, PairRating>>({})
+  const [responseTimes, setResponseTimes] = useState<Record<number, string>>({})
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedPresetId, setSelectedPresetId] = useState<(typeof PROMPT_PRESETS)[number]['id']>(PROMPT_PRESETS[0].id)
   const [showScrollTop, setShowScrollTop] = useState(false)
@@ -172,7 +183,14 @@ export function ChatPage() {
     event.preventDefault()
     const userMessage = input.trim()
     if ((!userMessage && attachedImages.length === 0) || loading) return
-    await sendMessage(userMessage, attachedImages)
+    const targetPairIndex = pairs.length
+    const sent = await sendMessage(userMessage, attachedImages)
+    if (!sent) return
+
+    setResponseTimes((prev) => ({
+      ...prev,
+      [targetPairIndex]: formatResponseTime(),
+    }))
     setInput('')
     setAttachedImages([])
   }
@@ -190,6 +208,10 @@ export function ChatPage() {
     if (!resumed) return
 
     setStoppedPairIndexes((prev) => prev.filter((i) => i !== pairIndex))
+    setResponseTimes((prev) => ({
+      ...prev,
+      [pairIndex]: formatResponseTime(),
+    }))
   }
 
   const handleRegenerate = async (pairIndex: number) => {
@@ -199,6 +221,10 @@ export function ChatPage() {
     if (!regenerated) return
 
     setStoppedPairIndexes((prev) => prev.filter((i) => i !== pairIndex))
+    setResponseTimes((prev) => ({
+      ...prev,
+      [pairIndex]: formatResponseTime(),
+    }))
   }
 
   const handleDeletePair = (pairIndex: number) => {
@@ -214,6 +240,16 @@ export function ChatPage() {
 
     setRatings((prev) => {
       const next: Record<number, PairRating> = {}
+      Object.entries(prev).forEach(([key, value]) => {
+        const index = Number(key)
+        if (index === pairIndex) return
+        next[index > pairIndex ? index - 1 : index] = value
+      })
+      return next
+    })
+
+    setResponseTimes((prev) => {
+      const next: Record<number, string> = {}
       Object.entries(prev).forEach(([key, value]) => {
         const index = Number(key)
         if (index === pairIndex) return
@@ -433,6 +469,7 @@ export function ChatPage() {
               onRate={(value) => handleRate(originalIndex, value)}
               onRegenerate={() => { void handleRegenerate(originalIndex) }}
               regenerateDisabled={loading}
+              responseTime={responseTimes[originalIndex]}
             />
           )
         })}

@@ -19,7 +19,7 @@ export type UseChatReturn = {
   loading: boolean
   stopped: boolean
   error: string
-  sendMessage: (userMessage: string, images?: File[]) => Promise<void>
+  sendMessage: (userMessage: string, images?: File[]) => Promise<boolean>
   resumePair: (pairIndex: number) => Promise<boolean>
   stopGeneration: () => void
   clearMessages: () => void
