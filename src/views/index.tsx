@@ -234,6 +234,8 @@ export function ChatPage() {
     () => persistedChatState?.selectedPresetId ?? PROMPT_PRESETS[0].id,
   )
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [sidebarOpenSignal, setSidebarOpenSignal] = useState(0)
+  const [sidebarTargetPairIndex, setSidebarTargetPairIndex] = useState<number | null>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null)
@@ -569,7 +571,6 @@ export function ChatPage() {
     setInput('')
     setSearchQuery('')
     setSelectedPresetId('direct')
-    setIsSidebarOpen(false)
 
     requestAnimationFrame(() => {
       messageInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -579,7 +580,8 @@ export function ChatPage() {
 
   const handleSidebarJump = (pairIndex: number) => {
     setSearchQuery('')
-    setIsSidebarOpen(false)
+    setSidebarTargetPairIndex(pairIndex)
+    setSidebarOpenSignal((prev) => prev + 1)
 
     requestAnimationFrame(() => {
       document.getElementById(`chat-card-${pairIndex}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -771,7 +773,7 @@ export function ChatPage() {
           const originalIndex = pair.pairIndex
           return (
             <ChatAccordionItem
-              key={originalIndex}
+              key={`${originalIndex}-${sidebarTargetPairIndex === originalIndex ? sidebarOpenSignal : 0}`}
               domId={`chat-card-${originalIndex}`}
               index={originalIndex + 1}
               question={pair.question}
@@ -783,7 +785,7 @@ export function ChatPage() {
                     ? 'stopped'
                     : undefined
               }
-              defaultOpen={originalIndex === pairs.length - 1}
+              defaultOpen={originalIndex === pairs.length - 1 || sidebarTargetPairIndex === originalIndex}
               onDelete={() => handleDeleteClick(originalIndex)}
               onResume={() => { void handleResume(originalIndex) }}
               resumeDisabled={loading}
