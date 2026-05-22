@@ -53,10 +53,18 @@ function loadPersistedChatState(): PersistedChatState | null {
     if (!Array.isArray(parsed.messages)) return null
 
     return {
-      messages: parsed.messages.filter(
-        (message): message is ChatMessage =>
-          message?.role !== undefined && typeof message.content === 'string',
-      ),
+      messages: parsed.messages
+        .filter(
+          (message): message is ChatMessage =>
+            message?.role !== undefined && typeof message.content === 'string',
+        )
+        .map((message) => ({
+          role: message.role,
+          content: message.content,
+          imageUrls: Array.isArray(message.imageUrls)
+            ? message.imageUrls.filter((value): value is string => typeof value === 'string')
+            : undefined,
+        })),
       selectedModelIndex: typeof parsed.selectedModelIndex === 'number' ? parsed.selectedModelIndex : 0,
       stoppedPairIndexes: Array.isArray(parsed.stoppedPairIndexes) ? parsed.stoppedPairIndexes.filter((value) => typeof value === 'number') : [],
       pinnedPairIndexes: Array.isArray(parsed.pinnedPairIndexes) ? parsed.pinnedPairIndexes.filter((value) => typeof value === 'number') : [],
@@ -239,6 +247,7 @@ export function ChatPage() {
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null)
+  const [resumingIndex, setResumingIndex] = useState<number | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [pendingDeletePairIndex, setPendingDeletePairIndex] = useState<number | null>(null)
   // 이미지 첨부 및 미리보기 상태
@@ -390,14 +399,19 @@ export function ChatPage() {
   const handleResume = async (pairIndex: number) => {
     if (loading) return
 
-    const resumed = await resumePair(pairIndex)
-    if (!resumed) return
+    setResumingIndex(pairIndex)
+    try {
+      const resumed = await resumePair(pairIndex)
+      if (!resumed) return
 
-    setStoppedPairIndexes((prev) => prev.filter((i) => i !== pairIndex))
-    setResponseTimes((prev) => ({
-      ...prev,
-      [pairIndex]: formatResponseTime(),
-    }))
+      setStoppedPairIndexes((prev) => prev.filter((i) => i !== pairIndex))
+      setResponseTimes((prev) => ({
+        ...prev,
+        [pairIndex]: formatResponseTime(),
+      }))
+    } finally {
+      setResumingIndex(null)
+    }
   }
 
   const handleRegenerate = async (pairIndex: number) => {
@@ -810,6 +824,7 @@ export function ChatPage() {
               onDelete={() => handleDeleteClick(originalIndex)}
               onResume={() => { void handleResume(originalIndex) }}
               resumeDisabled={loading}
+              resumeLoading={resumingIndex === originalIndex}
               isPinned={pinnedPairIndexes.includes(originalIndex)}
               onTogglePin={() => handleTogglePin(originalIndex)}
               rating={ratings[originalIndex]}
