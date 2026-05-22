@@ -69,6 +69,40 @@
   filter: saturate(1.06);
 }
 
+:root[data-theme='dark'] .confirm-overlay {
+  background: rgba(2, 6, 23, 0.56);
+  backdrop-filter: blur(3px);
+}
+
+:root[data-theme='dark'] .confirm-dialog {
+  border-color: rgba(125, 211, 252, 0.28);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.92));
+  box-shadow: 0 24px 56px rgba(2, 6, 23, 0.62);
+}
+
+:root[data-theme='dark'] .confirm-dialog h3 {
+  color: #e2e8f0;
+}
+
+:root[data-theme='dark'] .confirm-dialog p {
+  color: #94a3b8;
+}
+
+:root[data-theme='dark'] .confirm-cancel {
+  background: rgba(51, 65, 85, 0.72);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.36);
+}
+
+:root[data-theme='dark'] .confirm-cancel:hover {
+  background: rgba(71, 85, 105, 0.78);
+}
+
+:root[data-theme='dark'] .confirm-accept {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  box-shadow: 0 8px 18px rgba(153, 27, 27, 0.38);
+}
+
 @keyframes confirm-pop {
   from {
     opacity: 0;

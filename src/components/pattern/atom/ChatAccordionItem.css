@@ -230,6 +230,35 @@
   color: #e2e8f0;
 }
 
+:root[data-theme='dark'] .accordion-index {
+  color: #bfdbfe;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.34), rgba(14, 116, 144, 0.32));
+  border-color: rgba(125, 211, 252, 0.34);
+}
+
+:root[data-theme='dark'] .accordion-status-badge.completed {
+  color: #9dddb8;
+  background: rgba(22, 101, 52, 0.34);
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+:root[data-theme='dark'] .accordion-status-badge.stopped {
+  color: #e8bc90;
+  background: rgba(154, 52, 18, 0.28);
+  border-color: rgba(251, 146, 60, 0.42);
+}
+
+:root[data-theme='dark'] .accordion-resume-btn {
+  color: #a9d0e6;
+  background: rgba(14, 116, 144, 0.28);
+  border-color: rgba(125, 211, 252, 0.42);
+}
+
+:root[data-theme='dark'] .accordion-resume-btn:hover {
+  background: rgba(14, 116, 144, 0.42);
+  border-color: rgba(125, 211, 252, 0.58);
+}
+
 :root[data-theme='dark'] .accordion-toggle-btn:hover {
   background: rgba(51, 65, 85, 0.52);
 }
