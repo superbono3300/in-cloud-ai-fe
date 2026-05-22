@@ -139,13 +139,13 @@
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  background: none;
+  background: rgba(248, 250, 252, 0.88);
   border: none;
-  border: 1px solid transparent;
+  border: 1px solid rgba(203, 213, 225, 0.58);
   cursor: pointer;
-  color: #cbd5e1;
-  opacity: 0;
-  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  color: #94a3b8;
+  opacity: 1;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   border-radius: 8px;
 }
 .accordion-resume-btn {
@@ -181,15 +181,20 @@
   border-color: #cbd5e1;
 }
 
-.accordion-item:hover .accordion-delete-btn {
-  opacity: 1;
-  border-color: rgba(203, 213, 225, 0.45);
+.accordion-delete-btn:hover {
+  background: #fff1f2;
+  color: #dc2626;
+  border-color: #fecaca;
 }
 
-.accordion-delete-btn:hover {
-  /* background: #fff1f2; */
-  color: #ef4444;
-  border-color: #fecaca;
+.accordion-delete-btn:active {
+  transform: translateY(1px);
+}
+
+.accordion-delete-btn:focus-visible {
+  outline: none;
+  border-color: #f87171;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.28);
 }
 
 .accordion-body {
@@ -363,6 +368,23 @@
   border-color: rgba(125, 211, 252, 0.58);
   background: rgba(14, 116, 144, 0.36);
   color: #d0efff;
+}
+
+:root[data-theme='dark'] .accordion-delete-btn {
+  background: rgba(30, 41, 59, 0.78);
+  border-color: rgba(100, 116, 139, 0.52);
+  color: #94a3b8;
+}
+
+:root[data-theme='dark'] .accordion-delete-btn:hover {
+  background: rgba(127, 29, 29, 0.32);
+  border-color: rgba(248, 113, 113, 0.62);
+  color: #fca5a5;
+}
+
+:root[data-theme='dark'] .accordion-delete-btn:focus-visible {
+  border-color: rgba(248, 113, 113, 0.72);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.26);
 }
 
 :root[data-theme='dark'] .accordion-icon {
