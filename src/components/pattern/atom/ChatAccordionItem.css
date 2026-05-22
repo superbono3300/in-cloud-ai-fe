@@ -162,7 +162,7 @@
 }
 
 .accordion-delete-btn:hover {
-  background: #fff1f2;
+  /* background: #fff1f2; */
   color: #ef4444;
   border-color: #fecaca;
 }
