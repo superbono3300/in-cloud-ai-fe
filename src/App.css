@@ -72,6 +72,8 @@
 
 .chat-form {
   margin-top: 1.2rem;
+  position: relative;
+  isolation: isolate;
   padding: 1.15rem;
   background: var(--surface-elevated);
   border: 1px solid var(--surface-border);
@@ -80,6 +82,11 @@
   backdrop-filter: blur(10px);
   display: grid;
   gap: 0.95rem;
+}
+
+.chat-form > * {
+  position: relative;
+  z-index: 1;
 }
 
 .prompt-preset-row {
@@ -233,132 +240,100 @@ button {
 .chat-form .chat-submit-button {
   justify-self: end;
   position: relative;
-  isolation: isolate;
+  isolation: auto;
   overflow: hidden;
   border: none;
-  border-radius: 14px;
-  padding: 0.68rem 1.4rem;
-  min-width: 150px;
-  color: #e8f7ff;
+  border-radius: 15px;
+  width: 80px;
+  min-width: 80px;
+  height: 48px;
+  padding: 0;
+  margin-top: 0.15rem;
+  color: #ffffff;
   font-weight: 700;
   letter-spacing: 0;
-  background:
-    radial-gradient(120% 145% at 14% 12%, rgba(34, 211, 238, 0.22), transparent 58%),
-    radial-gradient(105% 135% at 86% 82%, rgba(129, 140, 248, 0.2), transparent 54%),
-    linear-gradient(145deg, rgba(8, 47, 73, 0.28) 0%, rgba(11, 63, 83, 0.24) 45%, rgba(15, 90, 113, 0.3) 100%);
-  background-size: 210% 190%, 205% 185%, 100% 100%;
-  background-position: 0% 0%, 100% 100%, 50% 50%;
+  background: linear-gradient(135deg, #2563eb, #0284c7);
   box-shadow:
-    0 12px 26px rgba(7, 28, 45, 0.26),
-    0 0 0 1px rgba(226, 232, 240, 0.18) inset,
-    0 0 0 2px rgba(14, 165, 233, 0.08) inset;
-  backdrop-filter: blur(10px) saturate(1.2);
+    0 12px 24px rgba(37, 99, 235, 0.28);
   cursor: pointer;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
-  animation: submit-flow 5.9s ease-in-out infinite;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
-.chat-form .chat-submit-button .chat-submit-label {
+.chat-form .chat-submit-button:not(.stop-button) .chat-submit-label {
+  display: none;
+}
+
+.chat-form .chat-submit-button .chat-submit-icon {
   position: relative;
-  z-index: 3;
-  color: #f8fdff;
-  text-shadow: 0 1px 1px rgba(2, 6, 23, 0.62), 0 0 6px rgba(186, 230, 253, 0.28);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
 }
 
-.chat-form .chat-submit-button::before {
-  content: '';
-  position: absolute;
-  width: 76px;
-  height: 76px;
-  left: 50%;
-  top: 50%;
-  border-radius: 999px;
-  transform: translate(-50%, -50%) translateX(0);
-  background:
-    radial-gradient(circle at 45% 40%, rgba(226, 232, 240, 0.9) 0%, rgba(191, 219, 254, 0.58) 26%, rgba(129, 140, 248, 0.26) 56%, rgba(99, 102, 241, 0) 74%),
-    radial-gradient(circle at 70% 74%, rgba(147, 197, 253, 0.45), rgba(125, 211, 252, 0) 68%);
-  filter: blur(1.6px) saturate(1.05);
-  opacity: 0.82;
+.chat-form .chat-submit-button.stop-button .chat-submit-label {
+  display: inline;
+  position: relative;
   z-index: 1;
-  animation: orb-drift 5.2s ease-in-out infinite;
-}
-
-.chat-form .chat-submit-button::after {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  border-radius: 11px;
-  background:
-    linear-gradient(170deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.08) 36%, rgba(7, 28, 45, 0.18) 100%),
-    radial-gradient(circle at 22% 36%, rgba(191, 219, 254, 0.22) 0 14%, rgba(191, 219, 254, 0) 36%),
-    radial-gradient(circle at 66% 70%, rgba(129, 140, 248, 0.2) 0 13%, rgba(129, 140, 248, 0) 34%),
-    radial-gradient(circle at 78% 26%, rgba(125, 211, 252, 0.18) 0 10%, rgba(125, 211, 252, 0) 30%);
-  background-size: 165% 165%, 185% 185%, 175% 175%, 100% 100%;
-  background-position: 0% 0%, 100% 100%, 20% 80%, 50% 50%;
-  pointer-events: none;
-  z-index: 1;
-  mix-blend-mode: normal;
-  opacity: 0.74;
-  animation: orb-current 4.4s ease-in-out infinite;
+  line-height: 1;
+  color: #ffffff;
 }
 
 :root[data-theme='light'] .chat-form .chat-submit-button {
-  background:
-    radial-gradient(115% 150% at 16% 12%, rgba(56, 189, 248, 0.16), transparent 60%),
-    radial-gradient(105% 130% at 84% 82%, rgba(99, 102, 241, 0.14), transparent 56%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.24) 0%, rgba(236, 246, 255, 0.2) 45%, rgba(224, 242, 254, 0.26) 100%);
-  box-shadow:
-    0 9px 20px rgba(14, 116, 144, 0.16),
-    0 0 0 1px rgba(255, 255, 255, 0.42) inset,
-    0 0 0 2px rgba(14, 165, 233, 0.08) inset;
+  background: linear-gradient(135deg, #2563eb, #0284c7);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.26);
 }
 
 :root[data-theme='light'] .chat-form .chat-submit-button .chat-submit-label {
-  color: #0b3954;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+  color: #ffffff;
+  text-shadow: none;
 }
 
-:root[data-theme='light'] .chat-form .chat-submit-button::before {
-  opacity: 0.56;
-}
-
-:root[data-theme='light'] .chat-form .chat-submit-button::after {
-  opacity: 0.54;
+:root[data-theme='light'] .chat-form .chat-submit-button .chat-submit-icon {
+  color: #ffffff;
 }
 
 :root[data-theme='light'] .chat-form .chat-submit-button:hover {
   box-shadow:
-    0 12px 24px rgba(14, 116, 144, 0.2),
-    0 0 14px rgba(125, 211, 252, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    0 14px 28px rgba(37, 99, 235, 0.3);
 }
 
 .chat-form .chat-submit-button:focus-visible {
   outline: none;
   box-shadow:
-    0 0 0 4px rgba(56, 189, 248, 0.22),
-    0 14px 28px rgba(7, 28, 45, 0.32),
-    0 0 0 1px rgba(226, 232, 240, 0.26) inset;
+    0 0 0 4px rgba(96, 165, 250, 0.22),
+    0 14px 28px rgba(37, 99, 235, 0.28);
 }
 
 .chat-form .chat-submit-button:hover {
   transform: translateY(-1px) scale(1.01);
   box-shadow:
-    0 16px 32px rgba(7, 28, 45, 0.34),
-    0 0 18px rgba(125, 211, 252, 0.26),
-    0 0 0 1px rgba(226, 232, 240, 0.24) inset;
+    0 16px 32px rgba(37, 99, 235, 0.34);
   filter: saturate(1.08);
 }
 
+.chat-form .chat-submit-button:hover .chat-submit-icon {
+  transform: translateX(1px);
+}
+
 .chat-form .chat-submit-button.stop-button {
+  width: 80px;
+  min-width: 80px;
+  height: 48px;
+  padding: 0;
+  border-radius: 15px;
   background: linear-gradient(135deg, #ef4444, #dc2626);
   box-shadow: 0 12px 24px rgba(220, 38, 38, 0.26);
   animation: none;
 }
 
-.chat-form .chat-submit-button.stop-button::before,
-.chat-form .chat-submit-button.stop-button::after {
-  display: none;
+.chat-form .chat-submit-button.stop-button .chat-submit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  transform: translateY(1px);
 }
 
 .chat-form .chat-submit-button.stop-button:hover {
@@ -371,66 +346,6 @@ button {
   transform: none;
   box-shadow: none;
   animation: none;
-}
-
-@keyframes submit-flow {
-  0% {
-    background-position: 0% 0%, 100% 100%, 50% 50%;
-  }
-  33% {
-    background-position: 75% 24%, 28% 78%, 50% 50%;
-  }
-  50% {
-    background-position: 100% 46%, 0% 54%, 50% 50%;
-  }
-  72% {
-    background-position: 58% 80%, 44% 24%, 50% 50%;
-  }
-  100% {
-    background-position: 0% 0%, 100% 100%, 50% 50%;
-  }
-}
-
-@keyframes orb-drift {
-  0% {
-    transform: translate(-50%, -50%) translateX(-16px) scale(0.98);
-    opacity: 0.78;
-  }
-  35% {
-    transform: translate(-50%, -50%) translateX(10px) scale(1.06);
-    opacity: 0.9;
-  }
-  50% {
-    transform: translate(-50%, -50%) translateX(18px) scale(1.1);
-    opacity: 0.96;
-  }
-  75% {
-    transform: translate(-50%, -50%) translateX(-10px) scale(1.03);
-    opacity: 0.86;
-  }
-  100% {
-    transform: translate(-50%, -50%) translateX(-16px) scale(0.98);
-    opacity: 0.78;
-  }
-}
-
-@keyframes orb-current {
-  0% {
-    background-position: 0% 0%, 100% 100%, 20% 80%, 50% 50%;
-    opacity: 0.52;
-  }
-  35% {
-    background-position: 52% 28%, 72% 78%, 46% 44%, 50% 50%;
-    opacity: 0.74;
-  }
-  65% {
-    background-position: 86% 62%, 28% 34%, 74% 20%, 50% 50%;
-    opacity: 0.82;
-  }
-  100% {
-    background-position: 0% 0%, 100% 100%, 20% 80%, 50% 50%;
-    opacity: 0.52;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -559,8 +474,10 @@ button {
   }
 
   .chat-form .chat-submit-button {
-    width: 100%;
-    justify-self: stretch;
+    width: 150px;
+    min-width: 150px;
+    height: 48px;
+    justify-self: end;
   }
 
   .scroll-top-button {
