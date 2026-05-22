@@ -12,6 +12,7 @@ import { EmptyState } from '../components/pattern/atom/EmptyState'
 import { LoadingSpinner } from '../components/pattern/atom/LoadingSpinner'
 import { ChatAccordionItem } from '../components/pattern/atom/ChatAccordionItem'
 import { ConfirmDialog } from '../components/pattern/molecule/ConfirmDialog'
+import { OnboardingModal } from '../components/pattern/molecule/OnboardingModal'
 import { ImageAttachment } from '../components/pattern/molecule/ImageAttachment'
 import { ImagePreviewModal } from '../components/pattern/molecule/ImagePreviewModal'
 import LottieRobot from '../components/pattern/atom/LottieRobot'
@@ -35,6 +36,7 @@ type PersistedChatState = {
 }
 
 const CHAT_STATE_STORAGE_KEY = 'in-cloud-ai-gateway.chat-state.v1'
+const ONBOARDING_STORAGE_KEY = 'in-cloud-ai-gateway.onboarding-seen.v1'
 
 function isValidPresetId(value: string): value is (typeof PROMPT_PRESETS)[number]['id'] {
   return PROMPT_PRESETS.some((preset) => preset.id === value)
@@ -76,6 +78,22 @@ function savePersistedChatState(state: PersistedChatState): void {
 
   try {
     window.localStorage.setItem(CHAT_STATE_STORAGE_KEY, JSON.stringify(state))
+  } catch {
+    // Ignore storage write failures.
+  }
+}
+
+function hasSeenOnboarding(): boolean {
+  if (typeof window === 'undefined') return true
+
+  return window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === '1'
+}
+
+function markOnboardingSeen(): void {
+  if (typeof window === 'undefined') return
+
+  try {
+    window.localStorage.setItem(ONBOARDING_STORAGE_KEY, '1')
   } catch {
     // Ignore storage write failures.
   }
@@ -187,6 +205,7 @@ function formatResponseTime(date = new Date()): string {
 
 export function ChatPage() {
   const [persistedChatState] = useState<PersistedChatState | null>(() => loadPersistedChatState())
+  const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding())
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const savedTheme = localStorage.getItem('theme')
     if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -315,6 +334,16 @@ export function ChatPage() {
     const preset = PROMPT_PRESETS.find((item) => item.id === selectedPresetId)
     if (!preset) return
     setInput(preset.text)
+  }
+
+  const handleCloseOnboarding = () => {
+    markOnboardingSeen()
+    setShowOnboarding(false)
+  }
+
+  const handleStartOnboarding = () => {
+    markOnboardingSeen()
+    setShowOnboarding(false)
   }
 
   useEffect(() => {
@@ -506,6 +535,12 @@ export function ChatPage() {
 
   return (
     <main className="app-shell">
+      <OnboardingModal
+        open={showOnboarding}
+        onClose={handleCloseOnboarding}
+        onStart={handleStartOnboarding}
+      />
+
       <header className="app-header">
         <div className="app-header-top-row">
           <div className="app-header-title-row">
