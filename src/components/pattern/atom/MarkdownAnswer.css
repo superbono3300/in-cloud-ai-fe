@@ -179,3 +179,35 @@
   background: #eaf5ff;
   color: #0f3b5f;
 }
+
+:root[data-theme='dark'] .markdown-answer {
+  color: #dbeafe;
+}
+
+:root[data-theme='dark'] .markdown-answer h1,
+:root[data-theme='dark'] .markdown-answer h2,
+:root[data-theme='dark'] .markdown-answer h3,
+:root[data-theme='dark'] .markdown-answer h4 {
+  color: #e2e8f0;
+}
+
+:root[data-theme='dark'] .markdown-answer blockquote {
+  border-left-color: rgba(125, 211, 252, 0.62);
+  background: rgba(8, 47, 73, 0.5);
+  color: #bae6fd;
+}
+
+:root[data-theme='dark'] .markdown-inline-code {
+  background: rgba(30, 41, 59, 0.95);
+  color: #dbeafe;
+}
+
+:root[data-theme='dark'] .markdown-answer th,
+:root[data-theme='dark'] .markdown-answer td {
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+:root[data-theme='dark'] .markdown-answer th {
+  background: rgba(30, 41, 59, 0.9);
+  color: #bfdbfe;
+}

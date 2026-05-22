@@ -5,23 +5,23 @@
 }
 
 .image-attachment-dropzone {
-  border: 1px dashed #93c5fd;
+  border: 1px dashed var(--attach-drop-border);
   border-radius: 12px;
-  background: linear-gradient(180deg, rgba(240, 249, 255, 0.65), rgba(255, 255, 255, 0.6));
+  background: var(--attach-drop-bg);
   padding: 0.55rem;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .image-attachment-dropzone:hover {
-  border-color: #38bdf8;
-  background: linear-gradient(180deg, rgba(224, 242, 254, 0.72), rgba(255, 255, 255, 0.72));
+  border-color: var(--attach-drop-border-hover);
+  background: var(--attach-drop-bg-hover);
 }
 
 .image-attachment-dropzone:focus-visible {
   outline: none;
-  border-color: #0ea5e9;
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+  border-color: var(--attach-drop-border-focus);
+  box-shadow: 0 0 0 3px var(--attach-drop-focus-ring);
 }
 
 .image-attachment-list {
@@ -43,8 +43,8 @@
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
-  border: 1.5px solid #bae6fd;
-  background: #f0f9ff;
+  border: 1.5px solid var(--attach-thumb-border);
+  background: var(--attach-thumb-bg);
   cursor: pointer;
   transition: box-shadow 0.18s;
 }
@@ -58,7 +58,7 @@
 }
 
 .image-thumb:hover {
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.18);
+  box-shadow: 0 4px 16px var(--attach-thumb-shadow-hover);
 }
 
 .remove-btn {
@@ -84,7 +84,7 @@
 
 .image-attachment-empty {
   margin: 0;
-  color: #64748b;
+  color: var(--attach-empty-text);
   font-size: 0.88rem;
   display: inline-flex;
   align-items: center;
@@ -97,9 +97,9 @@
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  border: 1px solid #7dd3fc;
-  background: #e0f2fe;
-  color: #0369a1;
+  border: 1px solid var(--attach-empty-icon-border);
+  background: var(--attach-empty-icon-bg);
+  color: var(--attach-empty-icon-text);
   font-size: 1rem;
   font-weight: 700;
   line-height: 1;
@@ -109,5 +109,5 @@
 }
 
 .image-attachment-empty-text {
-  color: #64748b;
+  color: var(--attach-empty-text);
 }

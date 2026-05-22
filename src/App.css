@@ -8,6 +8,13 @@
   margin-bottom: 1rem;
 }
 
+.app-header-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
 .app-header-title-row {
   display: inline-flex;
   align-items: center;
@@ -26,22 +33,50 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.15;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .app-header p {
   margin: 0.5rem 0 0;
-  color: #475569;
+  color: var(--text-secondary);
   font-size: 0.95rem;
+}
+
+.theme-toggle-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid var(--toggle-border);
+  border-radius: 999px;
+  background: var(--toggle-bg);
+  color: var(--toggle-text);
+  padding: 0.45rem 0.78rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  box-shadow: var(--toggle-shadow);
+  cursor: pointer;
+  transition: transform 0.16s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.theme-toggle-button:hover {
+  transform: translateY(-1px);
+}
+
+.theme-toggle-icon {
+  font-size: 0.84rem;
+  line-height: 1;
 }
 
 .chat-form {
   margin-top: 1.2rem;
   padding: 1.15rem;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: var(--surface-elevated);
+  border: 1px solid var(--surface-border);
   border-radius: 18px;
-  box-shadow: 0 22px 45px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--surface-shadow);
   backdrop-filter: blur(10px);
   display: grid;
   gap: 0.95rem;
@@ -59,7 +94,7 @@ label {
   font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 input,
@@ -74,12 +109,12 @@ button {
 .chat-form select {
   width: 100%;
   font-weight: 400;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--input-border);
   border-radius: 12px;
   padding: 0.72rem 0.88rem;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.78);
-  color: #0f172a;
+  background: var(--input-bg);
+  color: var(--text-primary);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
@@ -87,9 +122,9 @@ button {
 .chat-form textarea:focus,
 .chat-form select:focus {
   outline: none;
-  border-color: #0ea5e9;
-  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.16);
-  background: #ffffff;
+  border-color: var(--focus-border);
+  box-shadow: 0 0 0 4px var(--focus-ring);
+  background: var(--input-focus-bg);
 }
 
 .chat-form select {
@@ -146,9 +181,9 @@ button {
 
 .error {
   margin-top: 0.8rem;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+  background: var(--error-bg);
   border-radius: 12px;
   padding: 0.75rem 0.9rem;
 }
@@ -162,10 +197,10 @@ button {
 .empty {
   margin: 0;
   padding: 1rem 1.1rem;
-  color: #64748b;
-  border: 1px dashed #bfd4eb;
+  color: var(--text-muted);
+  border: 1px dashed var(--empty-border);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.65);
+  background: var(--empty-bg);
 }
 
 .scroll-top-button {
@@ -174,13 +209,13 @@ button {
   bottom: 1.25rem;
   width: 42px;
   height: 42px;
-  border: 1px solid rgba(14, 165, 233, 0.35);
+  border: 1px solid var(--scroll-border);
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(240, 249, 255, 0.96), rgba(224, 242, 254, 0.9));
-  color: #0c4a6e;
+  background: var(--scroll-bg);
+  color: var(--scroll-text);
   font-size: 1.2rem;
   font-weight: 700;
-  box-shadow: 0 10px 25px rgba(14, 116, 144, 0.22);
+  box-shadow: var(--scroll-shadow);
   cursor: pointer;
   opacity: 0;
   transform: translateY(8px) scale(0.92);
@@ -197,7 +232,7 @@ button {
 
 .scroll-top-button:hover {
   filter: saturate(1.06);
-  box-shadow: 0 14px 28px rgba(14, 116, 144, 0.28);
+  box-shadow: var(--scroll-shadow-hover);
 }
 
 @media (max-width: 768px) {
@@ -208,6 +243,11 @@ button {
   .app-header-title-row {
     gap: 0.45rem;
     padding: 0.35rem 0.55rem 0.35rem 0.22rem;
+  }
+
+  .theme-toggle-button {
+    padding: 0.38rem 0.64rem;
+    font-size: 0.76rem;
   }
 
   .grid-row {

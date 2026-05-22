@@ -37,6 +37,14 @@ function groupMessages(messages: ChatMessage[]): QAPair[] {
 }
 
 export function ChatPage() {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme
+    }
+
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
   const [selectedModelIndex, setSelectedModelIndex] = useState(0)
   const [systemPrompt] = useState('당신은 아이엔소프트 AI 도우미입니다.')
   const [input, setInput] = useState('간단한 React 컴포넌트 예제를 보여줘.')
@@ -115,12 +123,33 @@ export function ChatPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const handleThemeToggle = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
+  }
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
   return (
     <main className="app-shell">
       <header className="app-header">
-        <div className="app-header-title-row">
-          <LottieRobot size={68} />
-          <h1>IN Cloud AI Gateway</h1>
+        <div className="app-header-top-row">
+          <div className="app-header-title-row">
+            <LottieRobot size={68} />
+            <h1>IN Cloud AI Gateway</h1>
+          </div>
+          <button
+            type="button"
+            className="theme-toggle-button"
+            onClick={handleThemeToggle}
+            aria-label={theme === 'light' ? '다크 모드로 전환' : '라이트 모드로 전환'}
+            title={theme === 'light' ? '다크 모드' : '라이트 모드'}
+          >
+            <span className="theme-toggle-icon" aria-hidden="true">{theme === 'light' ? '🌙' : '☀️'}</span>
+            <span>{theme === 'light' ? '다크 모드' : '라이트 모드'}</span>
+          </button>
         </div>
         {/* <p>빠르고 안정적인 사내 AI 질의 도우미</p> */}
       </header>
