@@ -24,14 +24,18 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
     [model.apiBase, model.apiKey, model.headers],
   )
 
+  const buildBaseMessages = useCallback((): ChatMessage[] => {
+    if (memoizedOptions?.systemPrompt?.trim()) {
+      return [{ role: 'system', content: memoizedOptions.systemPrompt.trim() }]
+    }
+    return []
+  }, [memoizedOptions])
+
   const sendMessage = useCallback(
     async (userMessage: string) => {
       if (!userMessage.trim() || loading) return
 
-      const baseMessages: ChatMessage[] = []
-      if (memoizedOptions?.systemPrompt?.trim()) {
-        baseMessages.push({ role: 'system', content: memoizedOptions.systemPrompt.trim() })
-      }
+      const baseMessages = buildBaseMessages()
 
       setMessages((prev) => [...prev, { role: 'user', content: userMessage }])
       setError('')
@@ -73,7 +77,108 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
         setLoading(false)
       }
     },
-    [axiosInstance, loading, messages, model.model, memoizedOptions],
+    [axiosInstance, buildBaseMessages, loading, messages, model.model],
+  )
+
+  const resumePair = useCallback(
+    async (pairIndex: number): Promise<boolean> => {
+      if (loading) return false
+
+      let targetUserMessageIndex = -1
+      let currentPairIndex = 0
+      for (let i = 0; i < messages.length; i++) {
+        if (messages[i].role !== 'user') continue
+
+        if (currentPairIndex === pairIndex) {
+          targetUserMessageIndex = i
+          break
+        }
+        currentPairIndex += 1
+      }
+
+      if (targetUserMessageIndex < 0) return false
+
+      const targetUserMessage = messages[targetUserMessageIndex]
+      if (!targetUserMessage?.content.trim()) return false
+
+      setError('')
+      setStopped(false)
+      setLoading(true)
+
+      const controller = new AbortController()
+      controllerRef.current = controller
+
+      try {
+        const requestMessages = [
+          ...buildBaseMessages(),
+          ...messages.slice(0, targetUserMessageIndex + 1),
+        ]
+
+        const response = await axiosInstance.post('/chat/completions', {
+          model: model.model,
+          messages: requestMessages,
+        }, {
+          signal: controller.signal,
+        })
+
+        const assistantMessage = response.data?.choices?.[0]?.message?.content?.trim()
+        if (!assistantMessage) {
+          throw new Error('응답 본문이 비어 있습니다.')
+        }
+
+        setMessages((prev) => {
+          let userIndex = -1
+          let pairCount = 0
+
+          for (let i = 0; i < prev.length; i++) {
+            if (prev[i].role !== 'user') continue
+
+            if (pairCount === pairIndex) {
+              userIndex = i
+              break
+            }
+            pairCount += 1
+          }
+
+          if (userIndex < 0) return prev
+
+          const hasAssistant = prev[userIndex + 1]?.role === 'assistant'
+          if (hasAssistant) {
+            return [
+              ...prev.slice(0, userIndex + 1),
+              { role: 'assistant', content: assistantMessage },
+              ...prev.slice(userIndex + 2),
+            ]
+          }
+
+          return [
+            ...prev.slice(0, userIndex + 1),
+            { role: 'assistant', content: assistantMessage },
+            ...prev.slice(userIndex + 1),
+          ]
+        })
+
+        setStopped(false)
+        return true
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
+          setStopped(true)
+          setError('')
+          return false
+        }
+
+        setStopped(false)
+        const errorMessage = err instanceof Error ? err.message : '요청 처리 중 알 수 없는 오류가 발생했습니다.'
+        setError(errorMessage)
+        return false
+      } finally {
+        if (controllerRef.current === controller) {
+          controllerRef.current = null
+        }
+        setLoading(false)
+      }
+    },
+    [axiosInstance, buildBaseMessages, loading, messages, model.model],
   )
 
   const stopGeneration = useCallback(() => {
@@ -113,6 +218,7 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
     stopped,
     error,
     sendMessage,
+    resumePair,
     stopGeneration,
     clearMessages,
     setMessages,

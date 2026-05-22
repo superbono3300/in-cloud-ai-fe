@@ -48,7 +48,7 @@ export function ChatPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const selectedModel = MODELS[selectedModelIndex]
-  const { messages, loading, error, sendMessage, stopGeneration, deletePair } = useChat(selectedModel, { systemPrompt })
+  const { messages, loading, error, sendMessage, resumePair, stopGeneration, deletePair } = useChat(selectedModel, { systemPrompt })
   const canSend = useMemo(() => input.trim().length > 0, [input])
   const pairs = useMemo(() => groupMessages(messages), [messages])
 
@@ -87,6 +87,15 @@ export function ChatPage() {
     await sendMessage(userMessage)
     setInput('')
     setAttachedImages([])
+  }
+
+  const handleResume = async (pairIndex: number) => {
+    if (loading) return
+
+    const resumed = await resumePair(pairIndex)
+    if (!resumed) return
+
+    setStoppedPairIndexes((prev) => prev.filter((i) => i !== pairIndex))
   }
 
   useEffect(() => {
@@ -168,6 +177,8 @@ export function ChatPage() {
                   prev.filter((i) => i !== originalIndex).map((i) => (i > originalIndex ? i - 1 : i))
                 )
               }}
+              onResume={() => { void handleResume(originalIndex) }}
+              resumeDisabled={loading}
             />
           )
         })}

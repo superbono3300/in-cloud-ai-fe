@@ -20,6 +20,7 @@ export type UseChatReturn = {
   stopped: boolean
   error: string
   sendMessage: (userMessage: string) => Promise<void>
+  resumePair: (pairIndex: number) => Promise<boolean>
   stopGeneration: () => void
   clearMessages: () => void
   setMessages: (messages: ChatMessage[]) => void
