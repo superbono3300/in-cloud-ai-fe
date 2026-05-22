@@ -7,6 +7,8 @@ type ImageAttachmentProps = {
   onPreview: (url: string) => void
 }
 
+const SUPPORTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+
 export function ImageAttachment({ files, onFilesChange, onPreview }: ImageAttachmentProps) {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const previews = useMemo(
@@ -21,7 +23,7 @@ export function ImageAttachment({ files, onFilesChange, onPreview }: ImageAttach
   }, [previews])
 
   const mergeImageFiles = (nextFiles: File[]) => {
-    const imageOnly = nextFiles.filter((file) => file.type.startsWith('image/'))
+    const imageOnly = nextFiles.filter((file) => SUPPORTED_IMAGE_TYPES.has(file.type))
     if (imageOnly.length === 0) return
     onFilesChange([...files, ...imageOnly])
   }
@@ -100,7 +102,7 @@ export function ImageAttachment({ files, onFilesChange, onPreview }: ImageAttach
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         multiple
         style={{ display: 'none' }}
         onChange={handleFileChange}

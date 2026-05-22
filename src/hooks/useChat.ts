@@ -2,6 +2,34 @@ import { useState, useCallback, useMemo, useRef } from 'react'
 import axios from 'axios'
 import type { ChatMessage, ChatApiModel, UseChatOptions, UseChatReturn } from '@type'
 
+type ChatCompletionContentPart =
+  | {
+      type: 'text'
+      text: string
+    }
+  | {
+      type: 'image_url'
+      image_url: {
+        url: string
+      }
+    }
+
+type ChatCompletionRequestMessage = {
+  role: ChatMessage['role']
+  content: string | ChatCompletionContentPart[]
+}
+
+const SUPPORTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('이미지를 읽는 중 오류가 발생했습니다.'))
+    reader.readAsDataURL(file)
+  })
+}
+
 export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>(options?.initialMessages || [])
   const [loading, setLoading] = useState(false)
@@ -17,7 +45,7 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
         baseURL: model.apiBase,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${model.apiKey}`,
+          'X-API-Key': model.apiKey,
           ...model.headers,
         },
       }),
@@ -32,12 +60,14 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
   }, [memoizedOptions])
 
   const sendMessage = useCallback(
-    async (userMessage: string) => {
-      if (!userMessage.trim() || loading) return
+    async (userMessage: string, images: File[] = []) => {
+      const normalizedMessage = userMessage.trim()
+      if ((!normalizedMessage && images.length === 0) || loading) return
 
       const baseMessages = buildBaseMessages()
+      const displayMessage = normalizedMessage || '(이미지 첨부)'
 
-      setMessages((prev) => [...prev, { role: 'user', content: userMessage }])
+      setMessages((prev) => [...prev, { role: 'user', content: displayMessage }])
       setError('')
       setStopped(false)
       setLoading(true)
@@ -46,9 +76,37 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
       controllerRef.current = controller
 
       try {
+        const validImages = images.filter((file) => SUPPORTED_IMAGE_TYPES.has(file.type))
+        const imageDataUrls = await Promise.all(validImages.map(fileToDataUrl))
+
+        const userContent: string | ChatCompletionContentPart[] =
+          imageDataUrls.length === 0
+            ? normalizedMessage
+            : [
+                ...(normalizedMessage
+                  ? [
+                      {
+                        type: 'text' as const,
+                        text: normalizedMessage,
+                      },
+                    ]
+                  : []),
+                ...imageDataUrls.map((url) => ({
+                  type: 'image_url' as const,
+                  image_url: { url },
+                })),
+              ]
+
+        const requestMessages: ChatCompletionRequestMessage[] = [
+          ...baseMessages,
+          ...messages,
+          { role: 'user', content: userContent },
+        ]
+
         const response = await axiosInstance.post('/chat/completions', {
           model: model.model,
-          messages: [...baseMessages, ...messages, { role: 'user', content: userMessage }],
+          stream: false,
+          messages: requestMessages,
         }, {
           signal: controller.signal,
         })
@@ -116,6 +174,7 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
 
         const response = await axiosInstance.post('/chat/completions', {
           model: model.model,
+          stream: false,
           messages: requestMessages,
         }, {
           signal: controller.signal,

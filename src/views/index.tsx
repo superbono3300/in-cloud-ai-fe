@@ -95,7 +95,10 @@ export function ChatPage() {
 
   const selectedModel = MODELS[selectedModelIndex]
   const { messages, loading, error, sendMessage, resumePair, stopGeneration, deletePair } = useChat(selectedModel, { systemPrompt })
-  const canSend = useMemo(() => input.trim().length > 0, [input])
+  const canSend = useMemo(
+    () => input.trim().length > 0 || attachedImages.length > 0,
+    [attachedImages.length, input],
+  )
   const pairs = useMemo(() => groupMessages(messages), [messages])
   const visiblePairs = useMemo(() => {
     const pinnedSet = new Set(pinnedPairIndexes)
@@ -168,9 +171,8 @@ export function ChatPage() {
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault()
     const userMessage = input.trim()
-    if (!userMessage || loading) return
-    // TODO: 이미지 첨부 전송 로직 필요 (API 연동 시)
-    await sendMessage(userMessage)
+    if ((!userMessage && attachedImages.length === 0) || loading) return
+    await sendMessage(userMessage, attachedImages)
     setInput('')
     setAttachedImages([])
   }
