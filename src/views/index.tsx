@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEventHandler } from 'react'
 import '../App.css'
 import { MODELS } from '../config/models'
@@ -230,11 +230,13 @@ export function ChatPage() {
   )
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
+  const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [pendingDeletePairIndex, setPendingDeletePairIndex] = useState<number | null>(null)
   // 이미지 첨부 및 미리보기 상태
   const [attachedImages, setAttachedImages] = useState<File[]>([])
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const messageInputRef = useRef<HTMLTextAreaElement | null>(null)
 
   const selectedModel = MODELS[selectedModelIndex]
   const { messages, loading, error, sendMessage, resumePair, stopGeneration, deletePair } = useChat(selectedModel, {
@@ -375,14 +377,29 @@ export function ChatPage() {
   const handleRegenerate = async (pairIndex: number) => {
     if (loading) return
 
-    const regenerated = await resumePair(pairIndex)
-    if (!regenerated) return
+    const targetPair = pairs[pairIndex]
+    setInput(typeof targetPair?.question === 'string' ? targetPair.question : '')
 
-    setStoppedPairIndexes((prev) => prev.filter((i) => i !== pairIndex))
-    setResponseTimes((prev) => ({
-      ...prev,
-      [pairIndex]: formatResponseTime(),
-    }))
+    requestAnimationFrame(() => {
+      messageInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      messageInputRef.current?.focus()
+      const valueLength = messageInputRef.current?.value.length ?? 0
+      messageInputRef.current?.setSelectionRange(valueLength, valueLength)
+    })
+
+    setRegeneratingIndex(pairIndex)
+    try {
+      const regenerated = await resumePair(pairIndex)
+      if (!regenerated) return
+
+      setStoppedPairIndexes((prev) => prev.filter((i) => i !== pairIndex))
+      setResponseTimes((prev) => ({
+        ...prev,
+        [pairIndex]: formatResponseTime(),
+      }))
+    } finally {
+      setRegeneratingIndex(null)
+    }
   }
 
   const handleDeletePair = (pairIndex: number) => {
@@ -573,6 +590,7 @@ export function ChatPage() {
         <MessageInput
           value={input}
           onChange={setInput}
+          textareaRef={messageInputRef}
         />
 
         <div className="prompt-preset-row">
@@ -653,6 +671,7 @@ export function ChatPage() {
               onRate={(value) => handleRate(originalIndex, value)}
               onRegenerate={() => { void handleRegenerate(originalIndex) }}
               regenerateDisabled={loading}
+              regenerateLoading={regeneratingIndex === originalIndex}
               responseTime={responseTimes[originalIndex]}
             />
           )

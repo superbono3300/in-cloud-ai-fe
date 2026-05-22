@@ -17,6 +17,7 @@ type ChatAccordionItemProps = {
   onRate?: (value: 'up' | 'down') => void
   onRegenerate?: () => void
   regenerateDisabled?: boolean
+  regenerateLoading?: boolean
   responseTime?: string
 }
 
@@ -32,10 +33,14 @@ export function ChatAccordionItem({
   onRate,
   onRegenerate,
   regenerateDisabled = false,
+  regenerateLoading = false,
   responseTime,
 }: ChatAccordionItemProps) {
   const [open, setOpen] = useState(defaultOpen)
   const [copied, setCopied] = useState(false)
+
+  // 재생성 중에는 항상 카드가 펼쳐진 상태로 표시
+  const isOpen = open || regenerateLoading
   const canQuickResume = status === 'stopped' && Boolean(onResume)
   const hasStatusBadge = status === 'completed' || canQuickResume
   const hasActions = Boolean(onDelete || hasStatusBadge)
@@ -64,13 +69,22 @@ export function ChatAccordionItem({
   }
 
   return (
-    <div className={`accordion-item ${open ? 'open' : ''}`}>
+    <div className={`accordion-item ${isOpen ? 'open' : ''} ${regenerateLoading ? 'regenerating' : ''}`}>
+      {regenerateLoading && (
+        <div className="accordion-regenerating-overlay" aria-hidden="true">
+          <span className="accordion-regenerating-chip">
+            <span className="regenerate-spinner" />
+            이 카드 재생성 중
+          </span>
+        </div>
+      )}
+
       <div className="accordion-header">
         <button
           type="button"
           className="accordion-trigger"
           onClick={() => setOpen((prev) => !prev)}
-          aria-expanded={open}
+          aria-expanded={isOpen}
         >
           <span className="accordion-index">Q{index}</span>
           <span className="accordion-question">{question}</span>
@@ -120,10 +134,10 @@ export function ChatAccordionItem({
               type="button"
               className="accordion-toggle-btn"
               onClick={() => setOpen((prev) => !prev)}
-              aria-label={open ? '접기' : '펼치기'}
-              title={open ? '접기' : '펼치기'}
+              aria-label={isOpen ? '접기' : '펼치기'}
+              title={isOpen ? '접기' : '펼치기'}
             >
-              <span className="accordion-icon">{open ? '▲' : '▼'}</span>
+              <span className="accordion-icon">{isOpen ? '▲' : '▼'}</span>
             </button>
           </div>
         )}
@@ -133,22 +147,39 @@ export function ChatAccordionItem({
             type="button"
             className="accordion-toggle-btn"
             onClick={() => setOpen((prev) => !prev)}
-            aria-label={open ? '접기' : '펼치기'}
-            title={open ? '접기' : '펼치기'}
+            aria-label={isOpen ? '접기' : '펼치기'}
+            title={isOpen ? '접기' : '펼치기'}
           >
-            <span className="accordion-icon">{open ? '▲' : '▼'}</span>
+            <span className="accordion-icon">{isOpen ? '▲' : '▼'}</span>
           </button>
         )}
       </div>
 
-      {open && (
+      {isOpen && (
         <div className="accordion-body">
           <div className="accordion-user">
             <span className="accordion-label user-label">사용자</span>
             <p>{question}</p>
           </div>
-          {answer && (
-            <div className="accordion-assistant">
+          {regenerateLoading ? (
+            <div className="accordion-assistant accordion-regen-loading">
+              <div className="accordion-assistant-head">
+                <span className="accordion-label ai-label">AI</span>
+                <span className="accordion-regen-badge">
+                  <span className="regenerate-spinner" aria-hidden="true" />
+                  답변 재생성 중...
+                </span>
+              </div>
+              <div className="regen-skeleton">
+                <div className="regen-skeleton-line" style={{ width: '88%' }} />
+                <div className="regen-skeleton-line" style={{ width: '72%' }} />
+                <div className="regen-skeleton-line" style={{ width: '80%' }} />
+                <div className="regen-skeleton-line" style={{ width: '60%' }} />
+              </div>
+            </div>
+          ) : (
+            answer && (
+              <div className="accordion-assistant">
               <div className="accordion-assistant-head">
                 <span className="accordion-label ai-label">AI</span>
                 {responseTime && <span className="accordion-response-time">{responseTime}</span>}
@@ -191,18 +222,26 @@ export function ChatAccordionItem({
                   {onRegenerate && (
                     <button
                       type="button"
-                      className="assistant-action-btn regenerate"
+                      className={`assistant-action-btn regenerate ${regenerateLoading ? 'loading' : ''}`}
                       onClick={onRegenerate}
                       disabled={regenerateDisabled}
-                      aria-label="답변 재생성"
-                      title="답변 재생성"
+                      aria-label={regenerateLoading ? '요청중' : '답변 재생성'}
+                      title={regenerateLoading ? '요청중' : '답변 재생성'}
                     >
-                      재생성
+                      {regenerateLoading ? (
+                        <>
+                          <span className="regenerate-spinner" aria-hidden="true" />
+                          요청중
+                        </>
+                      ) : (
+                        '재생성'
+                      )}
                     </button>
                   )}
                 </div>
               )}
             </div>
+            )
           )}
         </div>
       )}
