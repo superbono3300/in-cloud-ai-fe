@@ -103,10 +103,18 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
           { role: 'user', content: userContent },
         ]
 
-        const response = await axiosInstance.post('/chat/completions', {
+        const requestPayload = {
           model: model.model,
           stream: false,
           messages: requestMessages,
+        }
+
+        if (import.meta.env.DEV) {
+          console.info('[IN Cloud AI Gateway] chat payload', requestPayload)
+        }
+
+        const response = await axiosInstance.post('/chat/completions', {
+          ...requestPayload,
         }, {
           signal: controller.signal,
         })
