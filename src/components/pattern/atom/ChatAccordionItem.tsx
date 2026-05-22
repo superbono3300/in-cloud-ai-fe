@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './ChatAccordionItem.css'
 import { MarkdownAnswer } from './MarkdownAnswer'
 
@@ -35,9 +35,33 @@ export function ChatAccordionItem({
   responseTime,
 }: ChatAccordionItemProps) {
   const [open, setOpen] = useState(defaultOpen)
+  const [copied, setCopied] = useState(false)
   const canQuickResume = status === 'stopped' && Boolean(onResume)
   const hasStatusBadge = status === 'completed' || canQuickResume
   const hasActions = Boolean(onDelete || hasStatusBadge)
+
+  useEffect(() => {
+    if (!copied) return
+
+    const timer = window.setTimeout(() => {
+      setCopied(false)
+    }, 1800)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [copied])
+
+  const handleCopyAnswer = async () => {
+    if (!answer) return
+
+    try {
+      await navigator.clipboard.writeText(answer)
+      setCopied(true)
+    } catch {
+      setCopied(false)
+    }
+  }
 
   return (
     <div className={`accordion-item ${open ? 'open' : ''}`}>
@@ -130,8 +154,18 @@ export function ChatAccordionItem({
                 {responseTime && <span className="accordion-response-time">{responseTime}</span>}
               </div>
               <MarkdownAnswer content={answer} />
-              {(onRate || onRegenerate) && (
+              {(onRate || onRegenerate || answer) && (
                 <div className="accordion-assistant-actions">
+                  <button
+                    type="button"
+                    className={`assistant-action-btn copy ${copied ? 'active' : ''}`}
+                    onClick={handleCopyAnswer}
+                    aria-label="답변 복사"
+                    title="답변 복사"
+                    disabled={!answer}
+                  >
+                    {copied ? '복사됨' : '복사'}
+                  </button>
                   {/* {onRate && (
                     <>
                       <button

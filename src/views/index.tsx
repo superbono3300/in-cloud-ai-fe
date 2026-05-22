@@ -23,6 +23,64 @@ type QAPair = {
 
 type PairRating = 'up' | 'down'
 
+type PersistedChatState = {
+  messages: ChatMessage[]
+  selectedModelIndex: number
+  stoppedPairIndexes: number[]
+  pinnedPairIndexes: number[]
+  ratings: Record<number, PairRating>
+  responseTimes: Record<number, string>
+  searchQuery: string
+  selectedPresetId: (typeof PROMPT_PRESETS)[number]['id']
+}
+
+const CHAT_STATE_STORAGE_KEY = 'in-cloud-ai-gateway.chat-state.v1'
+
+function isValidPresetId(value: string): value is (typeof PROMPT_PRESETS)[number]['id'] {
+  return PROMPT_PRESETS.some((preset) => preset.id === value)
+}
+
+function loadPersistedChatState(): PersistedChatState | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const rawValue = window.localStorage.getItem(CHAT_STATE_STORAGE_KEY)
+    if (!rawValue) return null
+
+    const parsed = JSON.parse(rawValue) as Partial<PersistedChatState>
+    if (!Array.isArray(parsed.messages)) return null
+
+    return {
+      messages: parsed.messages.filter(
+        (message): message is ChatMessage =>
+          message?.role !== undefined && typeof message.content === 'string',
+      ),
+      selectedModelIndex: typeof parsed.selectedModelIndex === 'number' ? parsed.selectedModelIndex : 0,
+      stoppedPairIndexes: Array.isArray(parsed.stoppedPairIndexes) ? parsed.stoppedPairIndexes.filter((value) => typeof value === 'number') : [],
+      pinnedPairIndexes: Array.isArray(parsed.pinnedPairIndexes) ? parsed.pinnedPairIndexes.filter((value) => typeof value === 'number') : [],
+      ratings: parsed.ratings && typeof parsed.ratings === 'object' ? parsed.ratings : {},
+      responseTimes: parsed.responseTimes && typeof parsed.responseTimes === 'object' ? parsed.responseTimes : {},
+      searchQuery: typeof parsed.searchQuery === 'string' ? parsed.searchQuery : '',
+      selectedPresetId:
+        typeof parsed.selectedPresetId === 'string' && isValidPresetId(parsed.selectedPresetId)
+          ? parsed.selectedPresetId
+          : PROMPT_PRESETS[0].id,
+    }
+  } catch {
+    return null
+  }
+}
+
+function savePersistedChatState(state: PersistedChatState): void {
+  if (typeof window === 'undefined') return
+
+  try {
+    window.localStorage.setItem(CHAT_STATE_STORAGE_KEY, JSON.stringify(state))
+  } catch {
+    // Ignore storage write failures.
+  }
+}
+
 const PROMPT_PRESETS = [
   {
     id: 'summary',
@@ -128,6 +186,7 @@ function formatResponseTime(date = new Date()): string {
 }
 
 export function ChatPage() {
+  const [persistedChatState] = useState<PersistedChatState | null>(() => loadPersistedChatState())
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const savedTheme = localStorage.getItem('theme')
     if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -136,15 +195,20 @@ export function ChatPage() {
 
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
-  const [selectedModelIndex, setSelectedModelIndex] = useState(0)
+  const [selectedModelIndex, setSelectedModelIndex] = useState(() => {
+    const savedIndex = persistedChatState?.selectedModelIndex ?? 0
+    return Math.min(Math.max(savedIndex, 0), MODELS.length - 1)
+  })
   const [systemPrompt] = useState('당신은 아이엔소프트 AI 도우미입니다.')
   const [input, setInput] = useState('간단한 React 컴포넌트 예제를 보여줘.')
-  const [stoppedPairIndexes, setStoppedPairIndexes] = useState<number[]>([])
-  const [pinnedPairIndexes, setPinnedPairIndexes] = useState<number[]>([])
-  const [ratings, setRatings] = useState<Record<number, PairRating>>({})
-  const [responseTimes, setResponseTimes] = useState<Record<number, string>>({})
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedPresetId, setSelectedPresetId] = useState<(typeof PROMPT_PRESETS)[number]['id']>(PROMPT_PRESETS[0].id)
+  const [stoppedPairIndexes, setStoppedPairIndexes] = useState<number[]>(() => persistedChatState?.stoppedPairIndexes ?? [])
+  const [pinnedPairIndexes, setPinnedPairIndexes] = useState<number[]>(() => persistedChatState?.pinnedPairIndexes ?? [])
+  const [ratings, setRatings] = useState<Record<number, PairRating>>(() => persistedChatState?.ratings ?? {})
+  const [responseTimes, setResponseTimes] = useState<Record<number, string>>(() => persistedChatState?.responseTimes ?? {})
+  const [searchQuery, setSearchQuery] = useState(() => persistedChatState?.searchQuery ?? '')
+  const [selectedPresetId, setSelectedPresetId] = useState<(typeof PROMPT_PRESETS)[number]['id']>(
+    () => persistedChatState?.selectedPresetId ?? PROMPT_PRESETS[0].id,
+  )
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -154,7 +218,10 @@ export function ChatPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const selectedModel = MODELS[selectedModelIndex]
-  const { messages, loading, error, sendMessage, resumePair, stopGeneration, deletePair } = useChat(selectedModel, { systemPrompt })
+  const { messages, loading, error, sendMessage, resumePair, stopGeneration, deletePair } = useChat(selectedModel, {
+    systemPrompt,
+    initialMessages: persistedChatState?.messages ?? [],
+  })
   const canSend = useMemo(
     () => input.trim().length > 0 || attachedImages.length > 0,
     [attachedImages.length, input],
@@ -249,6 +316,19 @@ export function ChatPage() {
     if (!preset) return
     setInput(preset.text)
   }
+
+  useEffect(() => {
+    savePersistedChatState({
+      messages,
+      selectedModelIndex,
+      stoppedPairIndexes,
+      pinnedPairIndexes,
+      ratings,
+      responseTimes,
+      searchQuery,
+      selectedPresetId,
+    })
+  }, [messages, pinnedPairIndexes, ratings, responseTimes, searchQuery, selectedModelIndex, selectedPresetId, stoppedPairIndexes])
 
   const handleResume = async (pairIndex: number) => {
     if (loading) return

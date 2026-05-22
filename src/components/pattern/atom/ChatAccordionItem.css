@@ -261,25 +261,33 @@
   margin-top: 0.72rem;
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  justify-content: flex-end;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .assistant-action-btn {
-  border: 1px solid rgba(148, 163, 184, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.75);
-  color: #334155;
-  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1e293b;
+  font-size: 0.78rem;
   font-weight: 700;
-  padding: 0.25rem 0.62rem;
+  padding: 0.34rem 0.72rem;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .assistant-action-btn:hover {
   border-color: #38bdf8;
   color: #075985;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(14, 165, 233, 0.14);
 }
 
 .assistant-action-btn.active {
@@ -289,8 +297,31 @@
 }
 
 .assistant-action-btn.regenerate {
-  border-color: rgba(20, 184, 166, 0.45);
+  border-color: rgba(20, 184, 166, 0.55);
+  background: rgba(236, 253, 245, 0.95);
   color: #0f766e;
+}
+
+.assistant-action-btn.copy {
+  border-color: rgba(59, 130, 246, 0.52);
+  background: rgba(239, 246, 255, 0.96);
+  color: #1d4ed8;
+}
+
+.assistant-action-btn.copy:hover {
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+
+.assistant-action-btn.copy.active {
+  border-color: rgba(37, 99, 235, 0.48);
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.assistant-action-btn.copy:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .assistant-action-btn:disabled {
@@ -335,6 +366,38 @@
   background: rgba(154, 52, 18, 0.45);
   border-color: rgba(251, 146, 60, 0.58);
   color: #f2c7a0;
+}
+
+:root[data-theme='dark'] .assistant-action-btn {
+  border-color: rgba(148, 163, 184, 0.34);
+  background: rgba(30, 41, 59, 0.78);
+  color: #cbd5e1;
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.18);
+}
+
+:root[data-theme='dark'] .assistant-action-btn:hover {
+  border-color: rgba(125, 211, 252, 0.5);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e2e8f0;
+  box-shadow: 0 10px 18px rgba(2, 6, 23, 0.28);
+}
+
+:root[data-theme='dark'] .assistant-action-btn.regenerate {
+  border-color: rgba(45, 212, 191, 0.42);
+  background: rgba(6, 78, 59, 0.35);
+  color: #99f6e4;
+}
+
+:root[data-theme='dark'] .assistant-action-btn.copy {
+  border-color: rgba(96, 165, 250, 0.46);
+  background: rgba(30, 41, 59, 0.82);
+  color: #bfdbfe;
+}
+
+:root[data-theme='dark'] .assistant-action-btn.copy.active {
+  border-color: rgba(96, 165, 250, 0.62);
+  background: rgba(30, 64, 175, 0.3);
+  color: #dbeafe;
 }
 
 :root[data-theme='dark'] .accordion-status-action:focus-visible {
