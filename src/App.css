@@ -82,6 +82,59 @@
   gap: 0.95rem;
 }
 
+.prompt-preset-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.form-secondary-btn {
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--input-bg) 80%, transparent);
+  color: var(--text-primary);
+  padding: 0.5rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-width: 110px;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.form-secondary-btn:hover {
+  border-color: var(--focus-border);
+  background: color-mix(in srgb, var(--input-focus-bg) 84%, transparent);
+  transform: translateY(-1px);
+}
+
+.chat-tools-row {
+  margin-top: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.chat-search-input {
+  flex: 1;
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  padding: 0.58rem 0.78rem;
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+.chat-search-input:focus {
+  outline: none;
+  border-color: var(--focus-border);
+  box-shadow: 0 0 0 4px var(--focus-ring);
+}
+
+.chat-export-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .grid-row {
   display: grid;
   grid-template-columns: 1fr 2fr;
@@ -195,12 +248,30 @@ button {
 }
 
 .empty {
+  display: flex;
+  flex-direction: column;
   margin: 0;
   padding: 1rem 1.1rem;
   color: var(--text-muted);
   border: 1px dashed var(--empty-border);
   border-radius: 14px;
   background: var(--empty-bg);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 400px;
+  justify-content: center;
+}
+
+.empty-lottie {
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.empty-text {
+  margin: 0;
+  line-height: 1.55;
 }
 
 .scroll-top-button {
@@ -248,6 +319,27 @@ button {
   .theme-toggle-button {
     padding: 0.38rem 0.64rem;
     font-size: 0.76rem;
+  }
+
+  .prompt-preset-row,
+  .chat-tools-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chat-export-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .empty {
+    align-items: flex-start;
+  }
+
+  .empty-lottie {
+    width: 46px;
+    height: 46px;
   }
 
   .grid-row {

@@ -11,6 +11,12 @@ type ChatAccordionItemProps = {
   onDelete?: () => void
   onResume?: () => void
   resumeDisabled?: boolean
+  isPinned?: boolean
+  onTogglePin?: () => void
+  rating?: 'up' | 'down'
+  onRate?: (value: 'up' | 'down') => void
+  onRegenerate?: () => void
+  regenerateDisabled?: boolean
 }
 
 export function ChatAccordionItem({
@@ -22,6 +28,12 @@ export function ChatAccordionItem({
   onDelete,
   onResume,
   resumeDisabled = false,
+  // isPinned = false,
+  onTogglePin,
+  // rating,
+  onRate,
+  onRegenerate,
+  regenerateDisabled = false,
 }: ChatAccordionItemProps) {
   const [open, setOpen] = useState(defaultOpen)
 
@@ -36,13 +48,24 @@ export function ChatAccordionItem({
         >
           <span className="accordion-index">Q{index}</span>
           <span className="accordion-question">{question}</span>
+            {/* {onTogglePin && (
+              <button
+                type="button"
+                className={`accordion-pin-btn ${isPinned ? 'active' : ''}`}
+                onClick={onTogglePin}
+                title={isPinned ? '핀 해제' : '핀 고정'}
+                aria-label={isPinned ? '핀 해제' : '핀 고정'}
+              >
+                📌
+              </button>
+            )} */}
           {status && (
             <span className={`accordion-status-badge ${status}`}>
               {status === 'completed' ? '답변완료' : '중지함'}
             </span>
           )}
         </button>
-        {(onDelete || (status === 'stopped' && onResume)) && (
+        {(onDelete || onTogglePin || (status === 'stopped' && onResume)) && (
           <div className="accordion-actions">
             {status === 'stopped' && onResume && (
               <button
@@ -101,6 +124,44 @@ export function ChatAccordionItem({
             <div className="accordion-assistant">
               <span className="accordion-label ai-label">AI</span>
               <MarkdownAnswer content={answer} />
+              {(onRate || onRegenerate) && (
+                <div className="accordion-assistant-actions">
+                  {/* {onRate && (
+                    <>
+                      <button
+                        type="button"
+                        className={`assistant-action-btn ${rating === 'up' ? 'active' : ''}`}
+                        onClick={() => onRate('up')}
+                        aria-label="답변 좋아요"
+                        title="좋아요"
+                      >
+                        👍 좋아요
+                      </button>
+                      <button
+                        type="button"
+                        className={`assistant-action-btn ${rating === 'down' ? 'active' : ''}`}
+                        onClick={() => onRate('down')}
+                        aria-label="답변 별로예요"
+                        title="별로예요"
+                      >
+                        👎 별로예요
+                      </button>
+                    </>
+                  )} */}
+                  {onRegenerate && (
+                    <button
+                      type="button"
+                      className="assistant-action-btn regenerate"
+                      onClick={onRegenerate}
+                      disabled={regenerateDisabled}
+                      aria-label="답변 재생성"
+                      title="답변 재생성"
+                    >
+                      재생성
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

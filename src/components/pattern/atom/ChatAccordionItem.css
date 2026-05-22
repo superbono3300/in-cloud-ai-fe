@@ -44,6 +44,31 @@
   background: rgba(226, 232, 240, 0.5);
 }
 
+.accordion-pin-btn {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.36);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #475569;
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.accordion-pin-btn:hover {
+  border-color: #38bdf8;
+  color: #0369a1;
+}
+
+.accordion-pin-btn.active {
+  border-color: #38bdf8;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
 .accordion-trigger {
   flex: 1;
   min-width: 0;
@@ -215,6 +240,47 @@
   color: #0f172a;
 }
 
+.accordion-assistant-actions {
+  margin-top: 0.72rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.assistant-action-btn {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.62rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.assistant-action-btn:hover {
+  border-color: #38bdf8;
+  color: #075985;
+}
+
+.assistant-action-btn.active {
+  border-color: #0284c7;
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+.assistant-action-btn.regenerate {
+  border-color: rgba(20, 184, 166, 0.45);
+  color: #0f766e;
+}
+
+.assistant-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 :root[data-theme='dark'] .accordion-item {
   border-color: rgba(100, 116, 139, 0.5);
   background: rgba(15, 23, 42, 0.72);
@@ -263,6 +329,23 @@
   background: rgba(51, 65, 85, 0.52);
 }
 
+:root[data-theme='dark'] .accordion-pin-btn {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(30, 41, 59, 0.72);
+  color: #94a3b8;
+}
+
+:root[data-theme='dark'] .accordion-pin-btn:hover {
+  border-color: rgba(125, 211, 252, 0.52);
+  color: #bae6fd;
+}
+
+:root[data-theme='dark'] .accordion-pin-btn.active {
+  border-color: rgba(125, 211, 252, 0.58);
+  background: rgba(14, 116, 144, 0.36);
+  color: #d0efff;
+}
+
 :root[data-theme='dark'] .accordion-icon {
   color: #94a3b8;
 }
@@ -287,4 +370,26 @@
 
 :root[data-theme='dark'] .accordion-user p {
   color: #e2e8f0;
+}
+
+:root[data-theme='dark'] .assistant-action-btn {
+  border-color: rgba(148, 163, 184, 0.36);
+  background: rgba(30, 41, 59, 0.74);
+  color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .assistant-action-btn:hover {
+  border-color: rgba(125, 211, 252, 0.52);
+  color: #e0f2fe;
+}
+
+:root[data-theme='dark'] .assistant-action-btn.active {
+  border-color: rgba(125, 211, 252, 0.58);
+  background: rgba(14, 116, 144, 0.36);
+  color: #dff3ff;
+}
+
+:root[data-theme='dark'] .assistant-action-btn.regenerate {
+  border-color: rgba(45, 212, 191, 0.4);
+  color: #99f6e4;
 }

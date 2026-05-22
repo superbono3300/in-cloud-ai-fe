@@ -21,6 +21,40 @@ type QAPair = {
   answer: string | null
 }
 
+type PairRating = 'up' | 'down'
+
+const PROMPT_PRESETS = [
+  {
+    id: 'summary',
+    label: '요약형',
+    text: '아래 내용을 핵심만 5줄 이내로 요약해줘. 마지막에 실행 가능한 액션 아이템 3개도 제시해줘.',
+  },
+  {
+    id: 'steps',
+    label: '단계별 가이드',
+    text: '초급자도 이해할 수 있게 단계별로 설명해줘. 각 단계마다 예시를 1개씩 포함해줘.',
+  },
+  {
+    id: 'code-review',
+    label: '코드 리뷰',
+    text: '아래 코드의 문제점과 개선안을 우선순위로 정리해줘. 성능, 가독성, 안정성 관점으로 나눠서 답해줘.',
+  },
+  {
+    id: 'meeting-note',
+    label: '회의록 정리',
+    text: '아래 메모를 회의록 형식으로 정리해줘. 결정사항, TODO, 담당자, 일정 항목을 분리해서 작성해줘.',
+  },
+] as const
+
+// function escapeHtml(value: string): string {
+//   return value
+//     .replaceAll('&', '&amp;')
+//     .replaceAll('<', '&lt;')
+//     .replaceAll('>', '&gt;')
+//     .replaceAll('"', '&quot;')
+//     .replaceAll("'", '&#39;')
+// }
+
 function groupMessages(messages: ChatMessage[]): QAPair[] {
   const pairs: QAPair[] = []
   for (let i = 0; i < messages.length; i++) {
@@ -49,6 +83,10 @@ export function ChatPage() {
   const [systemPrompt] = useState('당신은 아이엔소프트 AI 도우미입니다.')
   const [input, setInput] = useState('간단한 React 컴포넌트 예제를 보여줘.')
   const [stoppedPairIndexes, setStoppedPairIndexes] = useState<number[]>([])
+  const [pinnedPairIndexes, setPinnedPairIndexes] = useState<number[]>([])
+  const [ratings, setRatings] = useState<Record<number, PairRating>>({})
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedPresetId, setSelectedPresetId] = useState<(typeof PROMPT_PRESETS)[number]['id']>(PROMPT_PRESETS[0].id)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   // 이미지 첨부 및 미리보기 상태
@@ -59,6 +97,46 @@ export function ChatPage() {
   const { messages, loading, error, sendMessage, resumePair, stopGeneration, deletePair } = useChat(selectedModel, { systemPrompt })
   const canSend = useMemo(() => input.trim().length > 0, [input])
   const pairs = useMemo(() => groupMessages(messages), [messages])
+  const visiblePairs = useMemo(() => {
+    const pinnedSet = new Set(pinnedPairIndexes)
+    const normalizedQuery = searchQuery.trim().toLowerCase()
+
+    const filtered = [...pairs]
+      .map((pair, pairIndex) => ({ ...pair, pairIndex }))
+      .reverse()
+      .filter((pair) => {
+        if (!normalizedQuery) return true
+
+        return (
+          pair.question.toLowerCase().includes(normalizedQuery) ||
+          pair.answer?.toLowerCase().includes(normalizedQuery)
+        )
+      })
+
+    return filtered.sort((a, b) => Number(pinnedSet.has(b.pairIndex)) - Number(pinnedSet.has(a.pairIndex)))
+  }, [pairs, pinnedPairIndexes, searchQuery])
+
+  const buildMarkdownExport = (): string => {
+    const lines: string[] = ['# IN Cloud AI Gateway Export', '']
+
+    pairs.forEach((pair, pairIndex) => {
+      const badges: string[] = []
+      if (pinnedPairIndexes.includes(pairIndex)) badges.push('PINNED')
+      if (ratings[pairIndex] === 'up') badges.push('좋아요')
+      if (ratings[pairIndex] === 'down') badges.push('별로예요')
+
+      lines.push(`## Q${pairIndex + 1}${badges.length > 0 ? ` [${badges.join(', ')}]` : ''}`)
+      lines.push('')
+      lines.push('### 사용자')
+      lines.push(pair.question)
+      lines.push('')
+      lines.push('### AI')
+      lines.push(pair.answer ?? '(답변 없음 또는 중지됨)')
+      lines.push('')
+    })
+
+    return lines.join('\n')
+  }
 
   const handleStop = () => {
     if (!loading) return
@@ -97,6 +175,12 @@ export function ChatPage() {
     setAttachedImages([])
   }
 
+  const handleApplyPreset = () => {
+    const preset = PROMPT_PRESETS.find((item) => item.id === selectedPresetId)
+    if (!preset) return
+    setInput(preset.text)
+  }
+
   const handleResume = async (pairIndex: number) => {
     if (loading) return
 
@@ -105,6 +189,107 @@ export function ChatPage() {
 
     setStoppedPairIndexes((prev) => prev.filter((i) => i !== pairIndex))
   }
+
+  const handleRegenerate = async (pairIndex: number) => {
+    if (loading) return
+
+    const regenerated = await resumePair(pairIndex)
+    if (!regenerated) return
+
+    setStoppedPairIndexes((prev) => prev.filter((i) => i !== pairIndex))
+  }
+
+  const handleDeletePair = (pairIndex: number) => {
+    deletePair(pairIndex)
+
+    setStoppedPairIndexes((prev) =>
+      prev.filter((i) => i !== pairIndex).map((i) => (i > pairIndex ? i - 1 : i)),
+    )
+
+    setPinnedPairIndexes((prev) =>
+      prev.filter((i) => i !== pairIndex).map((i) => (i > pairIndex ? i - 1 : i)),
+    )
+
+    setRatings((prev) => {
+      const next: Record<number, PairRating> = {}
+      Object.entries(prev).forEach(([key, value]) => {
+        const index = Number(key)
+        if (index === pairIndex) return
+        next[index > pairIndex ? index - 1 : index] = value
+      })
+      return next
+    })
+  }
+
+  const handleTogglePin = (pairIndex: number) => {
+    setPinnedPairIndexes((prev) =>
+      prev.includes(pairIndex) ? prev.filter((i) => i !== pairIndex) : [...prev, pairIndex],
+    )
+  }
+
+  const handleRate = (pairIndex: number, value: PairRating) => {
+    setRatings((prev) => {
+      if (prev[pairIndex] === value) {
+        const next = { ...prev }
+        delete next[pairIndex]
+        return next
+      }
+
+      return {
+        ...prev,
+        [pairIndex]: value,
+      }
+    })
+  }
+
+  const handleExportMarkdown = () => {
+    const blob = new Blob([buildMarkdownExport()], { type: 'text/markdown;charset=utf-8' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `chat-export-${new Date().toISOString().slice(0, 10)}.md`
+    link.click()
+    URL.revokeObjectURL(link.href)
+  }
+
+  // const handleExportPdf = () => {
+  //   const printableHtml = pairs
+  //     .map((pair, pairIndex) => {
+  //       const ratingLabel = ratings[pairIndex] === 'up' ? '좋아요' : ratings[pairIndex] === 'down' ? '별로예요' : ''
+  //       const pinLabel = pinnedPairIndexes.includes(pairIndex) ? 'PIN' : ''
+  //       const metaLabel = [pinLabel, ratingLabel].filter(Boolean).join(' · ')
+
+  //       return `
+  //         <section style="margin-bottom:20px; page-break-inside: avoid;">
+  //           <h2 style="font-size:18px; margin:0 0 8px;">Q${pairIndex + 1}${metaLabel ? ` (${metaLabel})` : ''}</h2>
+  //           <h3 style="font-size:14px; margin:0 0 6px;">사용자</h3>
+  //           <p style="white-space:pre-wrap; margin:0 0 10px;">${escapeHtml(pair.question)}</p>
+  //           <h3 style="font-size:14px; margin:0 0 6px;">AI</h3>
+  //           <p style="white-space:pre-wrap; margin:0;">${escapeHtml(pair.answer ?? '(답변 없음 또는 중지됨)')}</p>
+  //         </section>
+  //       `
+  //     })
+  //     .join('')
+
+  //   const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1000,height=800')
+  //   if (!printWindow) return
+
+  //   printWindow.document.write(`
+  //     <!doctype html>
+  //     <html lang="ko">
+  //       <head>
+  //         <meta charset="utf-8" />
+  //         <title>Chat Export</title>
+  //       </head>
+  //       <body style="font-family:'NanumSquare','Noto Sans KR',sans-serif; color:#0f172a; padding:24px;">
+  //         <h1 style="margin-top:0;">IN Cloud AI Gateway Export</h1>
+  //         ${printableHtml}
+  //       </body>
+  //     </html>
+  //   `)
+  //   printWindow.document.close()
+  //   printWindow.focus()
+  //   printWindow.print()
+  // }
 
   useEffect(() => {
     const onScroll = () => {
@@ -168,6 +353,21 @@ export function ChatPage() {
           onChange={setInput}
         />
 
+        <div className="prompt-preset-row">
+          <select
+            value={selectedPresetId}
+            onChange={(event) => setSelectedPresetId(event.target.value as (typeof PROMPT_PRESETS)[number]['id'])}
+            aria-label="프롬프트 프리셋 선택"
+          >
+            {PROMPT_PRESETS.map((preset) => (
+              <option key={preset.id} value={preset.id}>{preset.label}</option>
+            ))}
+          </select>
+          <button type="button" className="form-secondary-btn" onClick={handleApplyPreset}>
+            프리셋 적용
+          </button>
+        </div>
+
         {/* 이미지 첨부 UI */}
         <ImageAttachment
           files={attachedImages}
@@ -180,12 +380,34 @@ export function ChatPage() {
 
       {error && <ErrorMessage message={error} />}
 
+      <div className="chat-tools-row">
+        <input
+          type="search"
+          className="chat-search-input"
+          placeholder="질문/답변 검색"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          aria-label="대화 검색"
+        />
+        <div className="chat-export-actions">
+          <button type="button" className="form-secondary-btn" onClick={handleExportMarkdown}>
+            Markdown 내보내기
+          </button>
+          {/* <button type="button" className="form-secondary-btn" onClick={handleExportPdf}>
+            PDF 저장
+          </button> */}
+        </div>
+      </div>
+
       <section className="chat-list" aria-live="polite">
         {loading && <LoadingSpinner />}
         {pairs.length === 0 && !loading && <EmptyState />}
+        {pairs.length > 0 && visiblePairs.length === 0 && (
+          <p className="empty">검색 결과가 없습니다.</p>
+        )}
 
-        {[...pairs].reverse().map((pair, reversedIndex) => {
-          const originalIndex = pairs.length - 1 - reversedIndex
+        {visiblePairs.map((pair) => {
+          const originalIndex = pair.pairIndex
           return (
             <ChatAccordionItem
               key={originalIndex}
@@ -200,14 +422,15 @@ export function ChatPage() {
                     : undefined
               }
               defaultOpen={originalIndex === pairs.length - 1}
-              onDelete={() => {
-                deletePair(originalIndex)
-                setStoppedPairIndexes((prev) =>
-                  prev.filter((i) => i !== originalIndex).map((i) => (i > originalIndex ? i - 1 : i))
-                )
-              }}
+              onDelete={() => handleDeletePair(originalIndex)}
               onResume={() => { void handleResume(originalIndex) }}
               resumeDisabled={loading}
+              isPinned={pinnedPairIndexes.includes(originalIndex)}
+              onTogglePin={() => handleTogglePin(originalIndex)}
+              rating={ratings[originalIndex]}
+              onRate={(value) => handleRate(originalIndex, value)}
+              onRegenerate={() => { void handleRegenerate(originalIndex) }}
+              regenerateDisabled={loading}
             />
           )
         })}
