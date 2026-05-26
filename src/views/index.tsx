@@ -860,7 +860,7 @@ export function ChatPage() {
           const isGeneratingCard = loading && !pair.answer && originalIndex === pairs.length - 1
           return (
             <ChatAccordionItem
-              key={`${originalIndex}-${sidebarTargetPairIndex === originalIndex ? sidebarOpenSignal : 0}`}
+              key={originalIndex}
               domId={`chat-card-${originalIndex}`}
               index={originalIndex + 1}
               question={pair.question}
@@ -873,7 +873,9 @@ export function ChatPage() {
                     ? 'stopped'
                     : undefined
               }
-              defaultOpen={originalIndex === pairs.length - 1 || sidebarTargetPairIndex === originalIndex}
+              defaultOpen={originalIndex === pairs.length - 1}
+              sidebarToggleSignal={sidebarOpenSignal}
+              sidebarToggleActive={sidebarTargetPairIndex === originalIndex}
               onDelete={() => handleDeleteClick(originalIndex)}
               onResume={() => { void handleResume(originalIndex) }}
               resumeDisabled={loading}

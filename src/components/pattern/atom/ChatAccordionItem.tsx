@@ -10,6 +10,8 @@ type ChatAccordionItemProps = {
   userImageUrls?: string[]
   status?: 'stopped' | 'completed'
   defaultOpen?: boolean
+  sidebarToggleSignal?: number
+  sidebarToggleActive?: boolean
   onDelete?: () => void
   onResume?: () => void
   resumeDisabled?: boolean
@@ -34,6 +36,8 @@ export function ChatAccordionItem({
   userImageUrls = [],
   status,
   defaultOpen = false,
+  sidebarToggleSignal,
+  sidebarToggleActive = false,
   onDelete,
   onResume,
   resumeDisabled = false,
@@ -83,6 +87,18 @@ export function ChatAccordionItem({
       window.clearTimeout(timer)
     }
   }, [copied])
+
+  useEffect(() => {
+    if (!sidebarToggleActive) return
+
+    const frameId = window.requestAnimationFrame(() => {
+      setOpen((prev) => !prev)
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+    }
+  }, [sidebarToggleSignal, sidebarToggleActive])
 
   const handleCopyAnswer = async () => {
     if (!answer) return
