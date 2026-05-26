@@ -384,6 +384,46 @@
   margin-bottom: 0;
 }
 
+.accordion-assistant-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.assistant-copy-icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(59, 130, 246, 0.42);
+  background: rgba(239, 246, 255, 0.96);
+  color: #1d4ed8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.assistant-copy-icon-btn:hover {
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.assistant-copy-icon-btn.active {
+  border-color: rgba(37, 99, 235, 0.5);
+  background: #dbeafe;
+}
+
+.assistant-copy-icon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.assistant-copy-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.28);
+}
+
 .accordion-response-time {
   font-size: 0.72rem;
   font-weight: 600;
@@ -693,6 +733,24 @@
 }
 
 :root[data-theme='dark'] .assistant-action-btn.copy.active {
+  border-color: rgba(96, 165, 250, 0.62);
+  background: rgba(30, 64, 175, 0.3);
+  color: #dbeafe;
+}
+
+:root[data-theme='dark'] .assistant-copy-icon-btn {
+  border-color: rgba(96, 165, 250, 0.46);
+  background: rgba(30, 41, 59, 0.82);
+  color: #bfdbfe;
+}
+
+:root[data-theme='dark'] .assistant-copy-icon-btn:hover {
+  border-color: rgba(125, 211, 252, 0.56);
+  background: rgba(30, 64, 175, 0.26);
+  color: #dbeafe;
+}
+
+:root[data-theme='dark'] .assistant-copy-icon-btn.active {
   border-color: rgba(96, 165, 250, 0.62);
   background: rgba(30, 64, 175, 0.3);
   color: #dbeafe;

@@ -40,7 +40,6 @@ export function ChatAccordionItem({
   resumeLoading = false,
   onRate,
   onRegenerate,
-  regenerateDisabled = false,
   regenerateLoading = false,
   generationLoading = false,
   responseTime,
@@ -233,21 +232,26 @@ export function ChatAccordionItem({
               <div className="accordion-assistant">
               <div className="accordion-assistant-head">
                 <span className="accordion-label ai-label">AI</span>
-                {responseTime && <span className="accordion-response-time">{responseTime}</span>}
-              </div>
-              <MarkdownAnswer content={answer} />
-              {(onRate || onRegenerate || answer) && (
-                <div className="accordion-assistant-actions">
+                <div className="accordion-assistant-meta">
+                  {responseTime && <span className="accordion-response-time">{responseTime}</span>}
                   <button
                     type="button"
-                    className={`assistant-action-btn copy ${copied ? 'active' : ''}`}
+                    className={`assistant-copy-icon-btn ${copied ? 'active' : ''}`}
                     onClick={handleCopyAnswer}
-                    aria-label="답변 복사"
-                    title="답변 복사"
+                    aria-label={copied ? '복사됨' : '답변 복사'}
+                    title={copied ? '복사됨' : '답변 복사'}
                     disabled={!answer}
                   >
-                    {copied ? '복사됨' : '복사'}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
                   </button>
+                </div>
+              </div>
+              <MarkdownAnswer content={answer} />
+              {(onRate || onRegenerate) && (
+                <div className="accordion-assistant-actions">
                   {/* {onRate && (
                     <>
                       <button
@@ -270,7 +274,7 @@ export function ChatAccordionItem({
                       </button>
                     </>
                   )} */}
-                  {onRegenerate && (
+                  {/* {onRegenerate && (
                     <button
                       type="button"
                       className={`assistant-action-btn regenerate ${regenerateLoading ? 'loading' : ''}`}
@@ -288,7 +292,7 @@ export function ChatAccordionItem({
                         '재생성'
                       )}
                     </button>
-                  )}
+                  )} */}
                 </div>
               )}
             </div>
