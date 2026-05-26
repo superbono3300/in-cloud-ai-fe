@@ -12,18 +12,18 @@
   position: relative;
   background: #fff;
   border-radius: 18px;
-  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.24);
-  padding: 1.1rem 1.1rem 1rem;
-  max-width: 92vw;
-  max-height: 88vh;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+  padding: 0.42rem;
+  max-width: 96vw;
+  max-height: 92vh;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .image-preview-modal img {
-  max-width: 70vw;
-  max-height: 70vh;
+  max-width: 92vw;
+  max-height: 86vh;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(14, 165, 233, 0.13);
 }

@@ -7,6 +7,7 @@ type ChatAccordionItemProps = {
   index: number
   question: string
   answer: string | null
+  userImageUrls?: string[]
   status?: 'stopped' | 'completed'
   defaultOpen?: boolean
   onDelete?: () => void
@@ -21,6 +22,7 @@ type ChatAccordionItemProps = {
   regenerateDisabled?: boolean
   regenerateLoading?: boolean
   responseTime?: string
+  onPreviewImage?: (url: string) => void
 }
 
 export function ChatAccordionItem({
@@ -28,6 +30,7 @@ export function ChatAccordionItem({
   index,
   question,
   answer,
+  userImageUrls = [],
   status,
   defaultOpen = false,
   onDelete,
@@ -39,6 +42,7 @@ export function ChatAccordionItem({
   regenerateDisabled = false,
   regenerateLoading = false,
   responseTime,
+  onPreviewImage,
 }: ChatAccordionItemProps) {
   const [open, setOpen] = useState(defaultOpen)
   const [copied, setCopied] = useState(false)
@@ -163,7 +167,39 @@ export function ChatAccordionItem({
         <div className="accordion-body">
           <div className="accordion-user">
             <span className="accordion-label user-label">사용자</span>
-            <p>{question}</p>
+            {question && <p>{question}</p>}
+            {userImageUrls.length > 0 && (
+              <div className="accordion-user-images-wrap">
+                {userImageUrls.length > 1 && (
+                  <p className="accordion-user-images-hint">좌우 스와이프로 이미지를 확인하세요 ({userImageUrls.length}장)</p>
+                )}
+                <div className="accordion-user-images" aria-label="첨부 이미지">
+                  {userImageUrls.map((url, imageIndex) => (
+                    <figure className="accordion-user-image-slide" key={`${url.slice(0, 48)}-${imageIndex}`}>
+                      <button
+                        type="button"
+                        className="accordion-user-image-button"
+                        onClick={() => onPreviewImage?.(url)}
+                        aria-label={`첨부 이미지 ${imageIndex + 1} 미리보기`}
+                        title="이미지 미리보기"
+                      >
+                        <img
+                          src={url}
+                          alt={`첨부 이미지 ${imageIndex + 1}`}
+                          className="accordion-user-image"
+                          loading="lazy"
+                        />
+                      </button>
+                      {userImageUrls.length > 1 && (
+                        <figcaption className="accordion-user-image-index">
+                          {imageIndex + 1}/{userImageUrls.length}
+                        </figcaption>
+                      )}
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           {regenerateLoading ? (
             <div className="accordion-assistant accordion-regen-loading">

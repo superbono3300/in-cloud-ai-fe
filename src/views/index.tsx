@@ -20,6 +20,7 @@ import LottieRobot from '../components/pattern/atom/LottieRobot'
 type QAPair = {
   question: string
   answer: string | null
+  userImageUrls: string[]
 }
 
 type PairRating = 'up' | 'down'
@@ -199,6 +200,7 @@ function groupMessages(messages: ChatMessage[]): QAPair[] {
       pairs.push({
         question: messages[i].content,
         answer: next?.role === 'assistant' ? next.content : null,
+        userImageUrls: messages[i].imageUrls ?? [],
       })
       if (next?.role === 'assistant') i++
     }
@@ -841,6 +843,7 @@ export function ChatPage() {
               index={originalIndex + 1}
               question={pair.question}
               answer={pair.answer}
+              userImageUrls={pair.userImageUrls}
               status={
                 pair.answer
                   ? 'completed'
@@ -861,6 +864,7 @@ export function ChatPage() {
               regenerateDisabled={loading}
               regenerateLoading={regeneratingIndex === originalIndex}
               responseTime={responseTimes[originalIndex]}
+              onPreviewImage={setPreviewUrl}
             />
           )
         })}
