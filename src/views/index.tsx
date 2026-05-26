@@ -624,6 +624,12 @@ export function ChatPage() {
   }
 
   useEffect(() => {
+    if (!window.location.hash) return
+
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+  }, [])
+
+  useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
   }, [theme])
