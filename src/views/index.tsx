@@ -857,6 +857,7 @@ export function ChatPage() {
 
         {visiblePairs.map((pair) => {
           const originalIndex = pair.pairIndex
+          const isGeneratingCard = loading && !pair.answer && originalIndex === pairs.length - 1
           return (
             <ChatAccordionItem
               key={`${originalIndex}-${sidebarTargetPairIndex === originalIndex ? sidebarOpenSignal : 0}`}
@@ -884,6 +885,7 @@ export function ChatPage() {
               onRegenerate={() => { void handleRegenerate(originalIndex) }}
               regenerateDisabled={loading}
               regenerateLoading={regeneratingIndex === originalIndex}
+              generationLoading={isGeneratingCard}
               responseTime={responseTimes[originalIndex]}
               onPreviewImage={setPreviewUrl}
             />

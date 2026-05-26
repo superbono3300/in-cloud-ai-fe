@@ -21,6 +21,7 @@ type ChatAccordionItemProps = {
   onRegenerate?: () => void
   regenerateDisabled?: boolean
   regenerateLoading?: boolean
+  generationLoading?: boolean
   responseTime?: string
   onPreviewImage?: (url: string) => void
 }
@@ -41,6 +42,7 @@ export function ChatAccordionItem({
   onRegenerate,
   regenerateDisabled = false,
   regenerateLoading = false,
+  generationLoading = false,
   responseTime,
   onPreviewImage,
 }: ChatAccordionItemProps) {
@@ -48,7 +50,7 @@ export function ChatAccordionItem({
   const [copied, setCopied] = useState(false)
 
   // 재생성 중에는 항상 카드가 펼쳐진 상태로 표시
-  const isOpen = open || regenerateLoading
+  const isOpen = open || regenerateLoading || generationLoading
   const canQuickResume = status === 'stopped' && Boolean(onResume)
   const hasStatusBadge = status === 'completed' || canQuickResume
   const hasActions = Boolean(onDelete || hasStatusBadge)
@@ -77,12 +79,21 @@ export function ChatAccordionItem({
   }
 
   return (
-    <div id={domId} className={`accordion-item ${isOpen ? 'open' : ''} ${regenerateLoading ? 'regenerating' : ''}`}>
+    <div id={domId} className={`accordion-item ${isOpen ? 'open' : ''} ${regenerateLoading ? 'regenerating' : ''} ${generationLoading ? 'generating' : ''}`}>
       {regenerateLoading && (
         <div className="accordion-regenerating-overlay" aria-hidden="true">
           <span className="accordion-regenerating-chip">
             <span className="regenerate-spinner" />
             이 카드 재생성 중
+          </span>
+        </div>
+      )}
+
+      {generationLoading && !regenerateLoading && (
+        <div className="accordion-generating-overlay" aria-hidden="true">
+          <span className="accordion-generating-chip">
+            <span className="regenerate-spinner" />
+            이 카드 답변 생성 중
           </span>
         </div>
       )}
