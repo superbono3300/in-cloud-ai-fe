@@ -47,10 +47,27 @@ export function ChatAccordionItem({
 }: ChatAccordionItemProps) {
   const [open, setOpen] = useState(defaultOpen)
   const [copied, setCopied] = useState(false)
+  const [stoppedHovering, setStoppedHovering] = useState(false)
 
   // 재생성 중에는 항상 카드가 펼쳐진 상태로 표시
   const isOpen = open || regenerateLoading || generationLoading
   const canQuickResume = status === 'stopped' && Boolean(onResume)
+  const canStoppedRegenerate = canQuickResume && Boolean(onRegenerate)
+  const useRegenerateAction = canStoppedRegenerate && stoppedHovering
+  const stoppedActionLabel = useRegenerateAction ? '재생성' : (resumeLoading ? '요청중' : '중지함')
+  const stoppedActionTitle = useRegenerateAction ? '클릭하여 재생성' : (resumeLoading ? '요청중' : '클릭하여 재개')
+  const handleStoppedAction = () => {
+    if (resumeDisabled) return
+
+    if (useRegenerateAction && onRegenerate) {
+      onRegenerate()
+      return
+    }
+
+    if (onResume) {
+      onResume()
+    }
+  }
   const hasStatusBadge = status === 'completed' || canQuickResume
   const hasActions = Boolean(onDelete || hasStatusBadge)
 
@@ -114,24 +131,24 @@ export function ChatAccordionItem({
               <span
                 role="button"
                 tabIndex={resumeDisabled ? -1 : 0}
-                className={`accordion-status-badge stopped accordion-status-action ${resumeDisabled ? 'disabled' : ''}`}
-                onClick={() => {
-                  if (!resumeDisabled && onResume) {
-                    onResume()
-                  }
-                }}
+                className={`accordion-status-badge stopped accordion-status-action ${resumeDisabled ? 'disabled' : ''} ${useRegenerateAction ? 'regenerate-hover' : ''}`}
+                onClick={handleStoppedAction}
+                onMouseEnter={() => setStoppedHovering(true)}
+                onMouseLeave={() => setStoppedHovering(false)}
+                onFocus={() => setStoppedHovering(true)}
+                onBlur={() => setStoppedHovering(false)}
                 onKeyDown={(event) => {
-                  if (resumeDisabled || !onResume) return
+                  if (resumeDisabled || (!onResume && !onRegenerate)) return
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault()
-                    onResume()
+                    handleStoppedAction()
                   }
                 }}
                 aria-disabled={resumeDisabled}
-                aria-label={resumeLoading ? '요청중' : '중지된 답변 재개'}
-                title={resumeLoading ? '요청중' : '클릭하여 재개'}
+                aria-label={stoppedActionLabel}
+                title={stoppedActionTitle}
               >
-                {resumeLoading ? '요청중' : '중지함'}
+                {stoppedActionLabel}
               </span>
             )}
             {status === 'completed' && !canQuickResume && (

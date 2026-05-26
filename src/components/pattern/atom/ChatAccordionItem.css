@@ -218,6 +218,12 @@
   color: #7c2d12;
 }
 
+.accordion-status-action.regenerate-hover {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
 .accordion-status-action:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.25);
@@ -721,6 +727,12 @@
   background: rgba(154, 52, 18, 0.45);
   border-color: rgba(251, 146, 60, 0.58);
   color: #f2c7a0;
+}
+
+:root[data-theme='dark'] .accordion-status-action.regenerate-hover {
+  background: rgba(22, 101, 52, 0.44);
+  border-color: rgba(74, 222, 128, 0.52);
+  color: #bbf7d0;
 }
 
 :root[data-theme='dark'] .assistant-action-btn {
