@@ -3,7 +3,7 @@
  */
 
 // Chat Types
-export type { ChatRole, ChatMessage, UseChatReturn } from './chat'
+export type { ChatRole, ChatMessage, ChatRequestState, UseChatReturn } from './chat'
 
 // API Types
 export type { ChatApiModel, ModelConfig, ChatApiResponse } from './api'

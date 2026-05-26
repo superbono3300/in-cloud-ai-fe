@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef } from 'react'
 import axios from 'axios'
-import type { ChatMessage, ChatApiModel, UseChatOptions, UseChatReturn } from '@type'
+import type { ChatMessage, ChatApiModel, UseChatOptions, UseChatReturn, ChatRequestState } from '@type'
 
 type ChatCompletionContentPart =
   | {
@@ -54,10 +54,11 @@ function fileToDataUrl(file: File): Promise<string> {
 
 export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>(options?.initialMessages || [])
-  const [loading, setLoading] = useState(false)
+  const [requestState, setRequestState] = useState<ChatRequestState>('idle')
   const [stopped, setStopped] = useState(false)
   const [error, setError] = useState('')
   const controllerRef = useRef<AbortController | null>(null)
+  const loading = requestState === 'submitting' || requestState === 'resuming' || requestState === 'stopping'
 
   const memoizedOptions = useMemo(() => options, [options])
 
@@ -91,7 +92,7 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
       const validImages = images.filter((file) => SUPPORTED_IMAGE_TYPES.has(file.type))
       setError('')
       setStopped(false)
-      setLoading(true)
+      setRequestState('submitting')
 
       const controller = new AbortController()
       controllerRef.current = controller
@@ -148,23 +149,25 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
 
         setMessages((prev) => [...prev, { role: 'assistant', content: assistantMessage }])
         setStopped(false)
+        setRequestState('idle')
         return true
       } catch (err) {
         if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
           setStopped(true)
           setError('')
+          setRequestState('stopped')
           return false
         }
 
         setStopped(false)
         const errorMessage = err instanceof Error ? err.message : '요청 처리 중 알 수 없는 오류가 발생했습니다.'
         setError(errorMessage)
+        setRequestState('error')
         return false
       } finally {
         if (controllerRef.current === controller) {
           controllerRef.current = null
         }
-        setLoading(false)
       }
     },
     [axiosInstance, buildBaseMessages, loading, messages, model.model],
@@ -193,7 +196,7 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
 
       setError('')
       setStopped(false)
-      setLoading(true)
+      setRequestState('resuming')
 
       const controller = new AbortController()
       controllerRef.current = controller
@@ -250,23 +253,25 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
         })
 
         setStopped(false)
+        setRequestState('idle')
         return true
       } catch (err) {
         if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
           setStopped(true)
           setError('')
+          setRequestState('stopped')
           return false
         }
 
         setStopped(false)
         const errorMessage = err instanceof Error ? err.message : '요청 처리 중 알 수 없는 오류가 발생했습니다.'
         setError(errorMessage)
+        setRequestState('error')
         return false
       } finally {
         if (controllerRef.current === controller) {
           controllerRef.current = null
         }
-        setLoading(false)
       }
     },
     [axiosInstance, buildBaseMessages, loading, messages, model.model],
@@ -275,16 +280,17 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
   const stopGeneration = useCallback(() => {
     if (!controllerRef.current) return
 
+    setRequestState('stopping')
     controllerRef.current.abort()
     controllerRef.current = null
     setStopped(true)
-    setLoading(false)
   }, [])
 
   const clearMessages = useCallback(() => {
     setMessages([])
     setStopped(false)
     setError('')
+    setRequestState('idle')
   }, [])
 
   const deletePair = useCallback((pairIndex: number) => {
@@ -305,6 +311,7 @@ export function useChat(model: ChatApiModel, options?: UseChatOptions): UseChatR
 
   return {
     messages,
+    requestState,
     loading,
     stopped,
     error,

@@ -13,10 +13,16 @@ export type ChatMessage = {
 }
 
 /**
+ * 요청 상태 머신 타입
+ */
+export type ChatRequestState = 'idle' | 'submitting' | 'resuming' | 'stopping' | 'stopped' | 'error'
+
+/**
  * useChat hook의 반환 타입
  */
 export type UseChatReturn = {
   messages: ChatMessage[]
+  requestState: ChatRequestState
   loading: boolean
   stopped: boolean
   error: string
