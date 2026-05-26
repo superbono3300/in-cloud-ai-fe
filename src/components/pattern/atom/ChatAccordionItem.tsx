@@ -51,6 +51,7 @@ export function ChatAccordionItem({
 
   // 재생성 중에는 항상 카드가 펼쳐진 상태로 표시
   const isOpen = open || regenerateLoading || generationLoading
+  const hasAttachment = userImageUrls.length > 0
   const canQuickResume = status === 'stopped' && Boolean(onResume)
   const canStoppedRegenerate = canQuickResume && Boolean(onRegenerate)
   const useRegenerateAction = canStoppedRegenerate && stoppedHovering
@@ -124,6 +125,19 @@ export function ChatAccordionItem({
           <span className="accordion-index">Q{index}</span>
           <span className="accordion-question">{question}</span>
         </button>
+
+        {hasAttachment && (
+          <span
+            className="accordion-attachment-indicator"
+            aria-label={`첨부 이미지 ${userImageUrls.length}개`}
+            title={`첨부 이미지 ${userImageUrls.length}개`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21.44 11.05 12.25 20.24a6 6 0 1 1-8.49-8.49l9.2-9.19a4 4 0 1 1 5.66 5.66l-9.2 9.19a2 2 0 1 1-2.83-2.83l8.48-8.48" />
+            </svg>
+            <span>{userImageUrls.length}</span>
+          </span>
+        )}
 
         {hasActions && (
           <div className="accordion-actions">

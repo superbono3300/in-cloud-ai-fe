@@ -181,6 +181,22 @@
   text-overflow: ellipsis;
 }
 
+.accordion-attachment-indicator {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.72rem 0.5rem 0.72rem 0;
+  padding: 0.24rem 0.46rem;
+  border-radius: 999px;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: rgba(239, 246, 255, 0.9);
+  color: #1d4ed8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .accordion-status-badge {
   flex-shrink: 0;
   display: inline-flex;
@@ -709,6 +725,12 @@
   color: #bfdbfe;
   background: linear-gradient(135deg, rgba(30, 64, 175, 0.34), rgba(14, 116, 144, 0.32));
   border-color: rgba(125, 211, 252, 0.34);
+}
+
+:root[data-theme='dark'] .accordion-attachment-indicator {
+  border-color: rgba(96, 165, 250, 0.36);
+  background: rgba(30, 64, 175, 0.24);
+  color: #bfdbfe;
 }
 
 :root[data-theme='dark'] .accordion-status-badge.completed {
