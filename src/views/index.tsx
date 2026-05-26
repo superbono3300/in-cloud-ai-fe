@@ -218,6 +218,10 @@ function formatResponseTime(date = new Date()): string {
   return `${yy}.${mm}.${dd} ${hh}:${min}:${ss}`
 }
 
+function normalizeDraftInput(value: string): string {
+  return value.trim().toLowerCase() === 'null' ? '' : value
+}
+
 export function ChatPage() {
   const [persistedChatState] = useState<PersistedChatState | null>(() => loadPersistedChatState())
   const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding())
@@ -256,6 +260,7 @@ export function ChatPage() {
   const [attachedImages, setAttachedImages] = useState<File[]>([])
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const messageInputRef = useRef<HTMLTextAreaElement | null>(null)
+  const hasFocusedOnEntryRef = useRef(false)
   const themeTransitionTimeoutRef = useRef<number | null>(null)
 
   const selectedModel = MODELS[selectedModelIndex]
@@ -263,9 +268,10 @@ export function ChatPage() {
     systemPrompt,
     initialMessages: persistedChatState?.messages ?? [],
   })
+  const normalizedInput = useMemo(() => normalizeDraftInput(input), [input])
   const canSend = useMemo(
-    () => input.trim().length > 0 || attachedImages.length > 0,
-    [attachedImages.length, input],
+    () => normalizedInput.trim().length > 0 || attachedImages.length > 0,
+    [attachedImages.length, normalizedInput],
   )
   const pairs = useMemo(() => groupMessages(messages), [messages])
   const visiblePairs = useMemo(() => {
@@ -350,7 +356,7 @@ export function ChatPage() {
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault()
-    const userMessage = input.trim()
+    const userMessage = normalizedInput.trim()
     if ((!userMessage && attachedImages.length === 0) || loading) return
     const targetPairIndex = pairs.length
     const sent = await sendMessage(userMessage, attachedImages)
@@ -373,6 +379,12 @@ export function ChatPage() {
 
     requestAnimationFrame(() => {
       setInput(nextInputValue)
+
+      requestAnimationFrame(() => {
+        messageInputRef.current?.focus()
+        const valueLength = messageInputRef.current?.value.length ?? 0
+        messageInputRef.current?.setSelectionRange(valueLength, valueLength)
+      })
     })
   }
 
@@ -385,6 +397,15 @@ export function ChatPage() {
     markOnboardingSeen()
     setShowOnboarding(false)
   }
+
+  useEffect(() => {
+    if (hasFocusedOnEntryRef.current || showOnboarding) return
+
+    hasFocusedOnEntryRef.current = true
+    requestAnimationFrame(() => {
+      messageInputRef.current?.focus()
+    })
+  }, [showOnboarding])
 
   useEffect(() => {
     savePersistedChatState({
@@ -776,7 +797,7 @@ export function ChatPage() {
         </div>
 
         <MessageInput
-          value={input}
+          value={normalizedInput}
           onChange={setInput}
           textareaRef={messageInputRef}
         />
