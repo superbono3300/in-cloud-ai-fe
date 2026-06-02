@@ -25,22 +25,111 @@ type QAPair = {
 
 type PairRating = 'up' | 'down'
 
-type PersistedChatState = {
+type ChatSession = {
+  id: string
+  title: string
   messages: ChatMessage[]
-  selectedModelIndex: number
   stoppedPairIndexes: number[]
   pinnedPairIndexes: number[]
   ratings: Record<number, PairRating>
   responseTimes: Record<number, string>
   searchQuery: string
   selectedPresetId: (typeof PROMPT_PRESETS)[number]['id']
+  updatedAt: string
+}
+
+type PersistedChatState = {
+  selectedModelIndex: number
+  activeSessionId: string
+  sessions: ChatSession[]
+}
+
+type LegacyPersistedChatState = {
+  messages?: ChatMessage[]
+  selectedModelIndex?: number
+  stoppedPairIndexes?: number[]
+  pinnedPairIndexes?: number[]
+  ratings?: Record<number, PairRating>
+  responseTimes?: Record<number, string>
+  searchQuery?: string
+  selectedPresetId?: string
 }
 
 const CHAT_STATE_STORAGE_KEY = 'in-cloud-ai-gateway.chat-state.v1'
 const ONBOARDING_STORAGE_KEY = 'in-cloud-ai-gateway.onboarding-seen.v1'
 
+function createSessionId(): string {
+  return `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function normalizeSessionTitle(value: string, fallback: string): string {
+  const trimmed = value.trim()
+  return trimmed ? trimmed.slice(0, 50) : fallback
+}
+
 function isValidPresetId(value: string): value is (typeof PROMPT_PRESETS)[number]['id'] {
   return PROMPT_PRESETS.some((preset) => preset.id === value)
+}
+
+function sanitizeMessages(messages: unknown): ChatMessage[] {
+  if (!Array.isArray(messages)) return []
+
+  return messages
+    .filter(
+      (message): message is ChatMessage =>
+        typeof message === 'object' && message !== null && 'role' in message && 'content' in message,
+    )
+    .map((message) => ({
+      role: message.role,
+      content: typeof message.content === 'string' ? message.content : '',
+      imageUrls: Array.isArray(message.imageUrls)
+        ? message.imageUrls.filter((value): value is string => typeof value === 'string')
+        : undefined,
+    }))
+}
+
+function createDefaultSession(title = '새 대화'): ChatSession {
+  return {
+    id: createSessionId(),
+    title,
+    messages: [],
+    stoppedPairIndexes: [],
+    pinnedPairIndexes: [],
+    ratings: {},
+    responseTimes: {},
+    searchQuery: '',
+    selectedPresetId: 'direct',
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+function sanitizeSession(rawSession: unknown, index: number): ChatSession {
+  if (!rawSession || typeof rawSession !== 'object') {
+    return createDefaultSession(`새 대화 ${index + 1}`)
+  }
+
+  const session = rawSession as Partial<ChatSession>
+  const fallbackTitle = `새 대화 ${index + 1}`
+
+  return {
+    id: typeof session.id === 'string' && session.id.trim().length > 0 ? session.id : createSessionId(),
+    title: normalizeSessionTitle(typeof session.title === 'string' ? session.title : '', fallbackTitle),
+    messages: sanitizeMessages(session.messages),
+    stoppedPairIndexes: Array.isArray(session.stoppedPairIndexes)
+      ? session.stoppedPairIndexes.filter((value) => typeof value === 'number')
+      : [],
+    pinnedPairIndexes: Array.isArray(session.pinnedPairIndexes)
+      ? session.pinnedPairIndexes.filter((value) => typeof value === 'number')
+      : [],
+    ratings: session.ratings && typeof session.ratings === 'object' ? session.ratings : {},
+    responseTimes: session.responseTimes && typeof session.responseTimes === 'object' ? session.responseTimes : {},
+    searchQuery: typeof session.searchQuery === 'string' ? session.searchQuery : '',
+    selectedPresetId:
+      typeof session.selectedPresetId === 'string' && isValidPresetId(session.selectedPresetId)
+        ? session.selectedPresetId
+        : 'direct',
+    updatedAt: typeof session.updatedAt === 'string' ? session.updatedAt : new Date().toISOString(),
+  }
 }
 
 function loadPersistedChatState(): PersistedChatState | null {
@@ -50,33 +139,48 @@ function loadPersistedChatState(): PersistedChatState | null {
     const rawValue = window.localStorage.getItem(CHAT_STATE_STORAGE_KEY)
     if (!rawValue) return null
 
-    const parsed = JSON.parse(rawValue) as Partial<PersistedChatState>
-    if (!Array.isArray(parsed.messages)) return null
+    const parsed = JSON.parse(rawValue) as Partial<PersistedChatState & LegacyPersistedChatState>
 
-    return {
-      messages: parsed.messages
-        .filter(
-          (message): message is ChatMessage =>
-            message?.role !== undefined && typeof message.content === 'string',
-        )
-        .map((message) => ({
-          role: message.role,
-          content: message.content,
-          imageUrls: Array.isArray(message.imageUrls)
-            ? message.imageUrls.filter((value): value is string => typeof value === 'string')
-            : undefined,
-        })),
-      selectedModelIndex: typeof parsed.selectedModelIndex === 'number' ? parsed.selectedModelIndex : 0,
-      stoppedPairIndexes: Array.isArray(parsed.stoppedPairIndexes) ? parsed.stoppedPairIndexes.filter((value) => typeof value === 'number') : [],
-      pinnedPairIndexes: Array.isArray(parsed.pinnedPairIndexes) ? parsed.pinnedPairIndexes.filter((value) => typeof value === 'number') : [],
-      ratings: parsed.ratings && typeof parsed.ratings === 'object' ? parsed.ratings : {},
-      responseTimes: parsed.responseTimes && typeof parsed.responseTimes === 'object' ? parsed.responseTimes : {},
-      searchQuery: typeof parsed.searchQuery === 'string' ? parsed.searchQuery : '',
-      selectedPresetId:
-        typeof parsed.selectedPresetId === 'string' && isValidPresetId(parsed.selectedPresetId)
-          ? parsed.selectedPresetId
-          : PROMPT_PRESETS[0].id,
+    if (Array.isArray(parsed.sessions)) {
+      const sessions = parsed.sessions.map((session, index) => sanitizeSession(session, index))
+      const fallbackSession = sessions[0] ?? createDefaultSession()
+      const activeSessionId =
+        typeof parsed.activeSessionId === 'string' && sessions.some((session) => session.id === parsed.activeSessionId)
+          ? parsed.activeSessionId
+          : fallbackSession.id
+
+      return {
+        selectedModelIndex: typeof parsed.selectedModelIndex === 'number' ? parsed.selectedModelIndex : 0,
+        activeSessionId,
+        sessions: sessions.length > 0 ? sessions : [fallbackSession],
+      }
     }
+
+    if (Array.isArray(parsed.messages)) {
+      const legacySession: ChatSession = {
+        id: createSessionId(),
+        title: '기본 대화',
+        messages: sanitizeMessages(parsed.messages),
+        stoppedPairIndexes: Array.isArray(parsed.stoppedPairIndexes) ? parsed.stoppedPairIndexes.filter((value) => typeof value === 'number') : [],
+        pinnedPairIndexes: Array.isArray(parsed.pinnedPairIndexes) ? parsed.pinnedPairIndexes.filter((value) => typeof value === 'number') : [],
+        ratings: parsed.ratings && typeof parsed.ratings === 'object' ? parsed.ratings : {},
+        responseTimes: parsed.responseTimes && typeof parsed.responseTimes === 'object' ? parsed.responseTimes : {},
+        searchQuery: typeof parsed.searchQuery === 'string' ? parsed.searchQuery : '',
+        selectedPresetId:
+          typeof parsed.selectedPresetId === 'string' && isValidPresetId(parsed.selectedPresetId)
+            ? parsed.selectedPresetId
+            : 'direct',
+        updatedAt: new Date().toISOString(),
+      }
+
+      return {
+        selectedModelIndex: typeof parsed.selectedModelIndex === 'number' ? parsed.selectedModelIndex : 0,
+        activeSessionId: legacySession.id,
+        sessions: [legacySession],
+      }
+    }
+
+    return null
   } catch {
     return null
   }
@@ -224,6 +328,20 @@ function normalizeDraftInput(value: string): string {
 
 export function ChatPage() {
   const [persistedChatState] = useState<PersistedChatState | null>(() => loadPersistedChatState())
+  const initialSessions = persistedChatState?.sessions.length ? persistedChatState.sessions : [createDefaultSession()]
+  const [sessions, setSessions] = useState<ChatSession[]>(() => {
+    return initialSessions
+  })
+  const [activeSessionId, setActiveSessionId] = useState<string>(() => {
+    if (persistedChatState?.activeSessionId && persistedChatState.sessions.some((session) => session.id === persistedChatState.activeSessionId)) {
+      return persistedChatState.activeSessionId
+    }
+    return initialSessions[0].id
+  })
+  const activeSession = useMemo(
+    () => sessions.find((session) => session.id === activeSessionId) ?? sessions[0],
+    [activeSessionId, sessions],
+  )
   const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding())
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const savedTheme = localStorage.getItem('theme')
@@ -239,13 +357,13 @@ export function ChatPage() {
   })
   const [systemPrompt] = useState('당신은 아이엔소프트 AI 도우미입니다.')
   const [input, setInput] = useState('')
-  const [stoppedPairIndexes, setStoppedPairIndexes] = useState<number[]>(() => persistedChatState?.stoppedPairIndexes ?? [])
-  const [pinnedPairIndexes, setPinnedPairIndexes] = useState<number[]>(() => persistedChatState?.pinnedPairIndexes ?? [])
-  const [ratings, setRatings] = useState<Record<number, PairRating>>(() => persistedChatState?.ratings ?? {})
-  const [responseTimes, setResponseTimes] = useState<Record<number, string>>(() => persistedChatState?.responseTimes ?? {})
-  const [searchQuery, setSearchQuery] = useState(() => persistedChatState?.searchQuery ?? '')
+  const [stoppedPairIndexes, setStoppedPairIndexes] = useState<number[]>(() => activeSession?.stoppedPairIndexes ?? [])
+  const [pinnedPairIndexes, setPinnedPairIndexes] = useState<number[]>(() => activeSession?.pinnedPairIndexes ?? [])
+  const [ratings, setRatings] = useState<Record<number, PairRating>>(() => activeSession?.ratings ?? {})
+  const [responseTimes, setResponseTimes] = useState<Record<number, string>>(() => activeSession?.responseTimes ?? {})
+  const [searchQuery, setSearchQuery] = useState(() => activeSession?.searchQuery ?? '')
   const [selectedPresetId, setSelectedPresetId] = useState<(typeof PROMPT_PRESETS)[number]['id']>(
-    () => persistedChatState?.selectedPresetId ?? PROMPT_PRESETS[0].id,
+    () => activeSession?.selectedPresetId ?? PROMPT_PRESETS[0].id,
   )
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [sidebarOpenSignal, setSidebarOpenSignal] = useState(0)
@@ -256,17 +374,24 @@ export function ChatPage() {
   const [resumingIndex, setResumingIndex] = useState<number | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [pendingDeletePairIndex, setPendingDeletePairIndex] = useState<number | null>(null)
+  const [showDeleteSessionConfirm, setShowDeleteSessionConfirm] = useState(false)
+  const [pendingDeleteSessionId, setPendingDeleteSessionId] = useState<string | null>(null)
+  const [showRenameSessionConfirm, setShowRenameSessionConfirm] = useState(false)
+  const [pendingRenameSessionId, setPendingRenameSessionId] = useState<string | null>(null)
+  const [renameSessionDraft, setRenameSessionDraft] = useState('')
   // 이미지 첨부 및 미리보기 상태
   const [attachedImages, setAttachedImages] = useState<File[]>([])
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const messageInputRef = useRef<HTMLTextAreaElement | null>(null)
   const hasFocusedOnEntryRef = useRef(false)
   const themeTransitionTimeoutRef = useRef<number | null>(null)
+  const prevActiveSessionIdRef = useRef<string | null>(null)
+  const skipSessionSyncRef = useRef(false)
 
   const selectedModel = MODELS[selectedModelIndex]
-  const { messages, loading, error, sendMessage, resumePair, stopGeneration, deletePair } = useChat(selectedModel, {
+  const { messages, loading, error, sendMessage, resumePair, stopGeneration, deletePair, setMessages } = useChat(selectedModel, {
     systemPrompt,
-    initialMessages: persistedChatState?.messages ?? [],
+    initialMessages: activeSession?.messages ?? [],
   })
   const normalizedInput = useMemo(() => normalizeDraftInput(input), [input])
   const canSend = useMemo(
@@ -296,6 +421,19 @@ export function ChatPage() {
     () => [...pairs].map((pair, pairIndex) => ({ ...pair, pairIndex })).reverse(),
     [pairs],
   )
+  const sessionItems = useMemo(
+    () => sessions.map((session) => {
+      const sessionPairs = groupMessages(session.messages)
+      const latestQuestion = sessionPairs[sessionPairs.length - 1]?.question ?? ''
+      return {
+        ...session,
+        pairCount: sessionPairs.length,
+        preview: latestQuestion || '아직 대화가 없습니다.',
+        isActive: session.id === activeSessionId,
+      }
+    }),
+    [activeSessionId, sessions],
+  )
   const completedPairCount = useMemo(
     () => pairs.filter((pair) => Boolean(pair.answer)).length,
     [pairs],
@@ -304,6 +442,119 @@ export function ChatPage() {
     () => stoppedPairIndexes.filter((pairIndex) => !pairs[pairIndex]?.answer).length,
     [pairs, stoppedPairIndexes],
   )
+
+  const handleCreateSession = () => {
+    if (loading) return
+
+    const nextSession = createDefaultSession(`새 대화 ${sessions.length + 1}`)
+
+    skipSessionSyncRef.current = true
+    setSessions((prev) => [nextSession, ...prev])
+    setActiveSessionId(nextSession.id)
+    setInput('')
+    setAttachedImages([])
+
+    requestAnimationFrame(() => {
+      messageInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      messageInputRef.current?.focus()
+    })
+  }
+
+  const handleSelectSession = (sessionId: string) => {
+    if (loading) return
+    if (sessionId === activeSessionId) return
+
+    skipSessionSyncRef.current = true
+    setActiveSessionId(sessionId)
+    setSidebarTargetPairIndex(null)
+  }
+
+  const handleRenameSession = (sessionId: string) => {
+    const targetSession = sessions.find((session) => session.id === sessionId)
+    if (!targetSession) return
+
+    setPendingRenameSessionId(sessionId)
+    setRenameSessionDraft(targetSession.title)
+    setShowRenameSessionConfirm(true)
+  }
+
+  const handleRenameSessionCancel = () => {
+    setShowRenameSessionConfirm(false)
+    setPendingRenameSessionId(null)
+    setRenameSessionDraft('')
+  }
+
+  const handleRenameSessionConfirm = () => {
+    if (!pendingRenameSessionId) {
+      handleRenameSessionCancel()
+      return
+    }
+
+    const targetSession = sessions.find((session) => session.id === pendingRenameSessionId)
+    if (!targetSession) {
+      handleRenameSessionCancel()
+      return
+    }
+
+    const normalizedTitle = normalizeSessionTitle(renameSessionDraft, targetSession.title)
+    setSessions((prev) => prev.map((session) => (
+      session.id === pendingRenameSessionId
+        ? {
+            ...session,
+            title: normalizedTitle,
+            updatedAt: new Date().toISOString(),
+          }
+        : session
+    )))
+
+    handleRenameSessionCancel()
+  }
+
+  const handleDeleteSession = (sessionId: string) => {
+    if (loading) return
+
+    const targetIndex = sessions.findIndex((session) => session.id === sessionId)
+    if (targetIndex < 0) return
+
+    const remainingSessions = sessions.filter((session) => session.id !== sessionId)
+    const nextSessions = remainingSessions.length > 0 ? remainingSessions : [createDefaultSession()]
+
+    let nextActiveSessionId = activeSessionId
+    if (activeSessionId === sessionId) {
+      const fallbackSession =
+        remainingSessions[targetIndex - 1] ??
+        remainingSessions[targetIndex] ??
+        nextSessions[0]
+      nextActiveSessionId = fallbackSession.id
+    }
+
+    skipSessionSyncRef.current = true
+    setSessions(nextSessions)
+    setActiveSessionId(nextActiveSessionId)
+    setSidebarTargetPairIndex(null)
+  }
+
+  const handleDeleteSessionClick = (sessionId: string) => {
+    if (loading) return
+
+    setPendingDeleteSessionId(sessionId)
+    setShowDeleteSessionConfirm(true)
+  }
+
+  const handleDeleteSessionCancel = () => {
+    setShowDeleteSessionConfirm(false)
+    setPendingDeleteSessionId(null)
+  }
+
+  const handleDeleteSessionConfirm = () => {
+    if (!pendingDeleteSessionId) {
+      handleDeleteSessionCancel()
+      return
+    }
+
+    handleDeleteSession(pendingDeleteSessionId)
+    handleDeleteSessionCancel()
+  }
 
   const buildMarkdownExport = (): string => {
     const lines: string[] = ['# IN Cloud AI Gateway Export', '']
@@ -408,17 +659,92 @@ export function ChatPage() {
   }, [showOnboarding])
 
   useEffect(() => {
+    if (!activeSessionId || !sessions.some((session) => session.id === activeSessionId)) return
+
     savePersistedChatState({
-      messages,
       selectedModelIndex,
-      stoppedPairIndexes,
-      pinnedPairIndexes,
-      ratings,
-      responseTimes,
-      searchQuery,
-      selectedPresetId,
+      activeSessionId,
+      sessions,
     })
-  }, [messages, pinnedPairIndexes, ratings, responseTimes, searchQuery, selectedModelIndex, selectedPresetId, stoppedPairIndexes])
+  }, [activeSessionId, selectedModelIndex, sessions])
+
+  useEffect(() => {
+    if (!activeSession) return
+
+    const frameId = window.requestAnimationFrame(() => {
+      const didSessionChange = prevActiveSessionIdRef.current !== activeSession.id
+
+      setMessages(activeSession.messages)
+      setStoppedPairIndexes(activeSession.stoppedPairIndexes)
+      setPinnedPairIndexes(activeSession.pinnedPairIndexes)
+      setRatings(activeSession.ratings)
+      setResponseTimes(activeSession.responseTimes)
+      setSearchQuery(activeSession.searchQuery)
+      setSelectedPresetId(activeSession.selectedPresetId)
+
+      if (didSessionChange) {
+        setInput('')
+        setAttachedImages([])
+      }
+
+      prevActiveSessionIdRef.current = activeSession.id
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+    }
+  }, [activeSession, setMessages])
+
+  useEffect(() => {
+    if (!activeSessionId) return
+
+    if (skipSessionSyncRef.current) {
+      skipSessionSyncRef.current = false
+      return
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setSessions((prev) => {
+        let changed = false
+
+        const next = prev.map((session) => {
+          if (session.id !== activeSessionId) return session
+
+          const isSame =
+            session.messages === messages &&
+            session.stoppedPairIndexes === stoppedPairIndexes &&
+            session.pinnedPairIndexes === pinnedPairIndexes &&
+            session.ratings === ratings &&
+            session.responseTimes === responseTimes &&
+            session.searchQuery === searchQuery &&
+            session.selectedPresetId === selectedPresetId
+
+          if (isSame) {
+            return session
+          }
+
+          changed = true
+          return {
+            ...session,
+            messages,
+            stoppedPairIndexes,
+            pinnedPairIndexes,
+            ratings,
+            responseTimes,
+            searchQuery,
+            selectedPresetId,
+            updatedAt: new Date().toISOString(),
+          }
+        })
+
+        return changed ? next : prev
+      })
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+    }
+  }, [activeSessionId, messages, pinnedPairIndexes, ratings, responseTimes, searchQuery, selectedPresetId, stoppedPairIndexes])
 
   const handleResume = async (pairIndex: number) => {
     if (loading) return
@@ -679,7 +1005,7 @@ export function ChatPage() {
           <div className="app-sidebar-head">
             <div>
               <strong>대화 패널</strong>
-              <p>{pairs.length}개의 질문 흐름</p>
+              <p>{sessions.length}개의 세션</p>
             </div>
             <button
               type="button"
@@ -695,9 +1021,61 @@ export function ChatPage() {
           <button
             type="button"
             className="app-sidebar-primary"
+            onClick={handleCreateSession}
+          >
+            새 대화 생성
+          </button>
+
+          <div className="app-sidebar-session-section">
+            <p className="app-sidebar-section-title">대화 세션</p>
+            <div className="app-session-list">
+              {sessionItems.map((session) => (
+                <div
+                  key={session.id}
+                  className={`app-session-item ${session.isActive ? 'active' : ''}`}
+                >
+                  <button
+                    type="button"
+                    className="app-session-select"
+                    onClick={() => handleSelectSession(session.id)}
+                    aria-label={`${session.title} 세션 열기`}
+                    title={session.title}
+                  >
+                    <span className="app-session-title">{session.title}</span>
+                    <span className="app-session-meta">질문 {session.pairCount}건</span>
+                    <span className="app-session-preview">{session.preview}</span>
+                  </button>
+                  <div className="app-session-actions">
+                    <button
+                      type="button"
+                      className="app-session-action-btn rename"
+                      onClick={() => handleRenameSession(session.id)}
+                      aria-label={`${session.title} 이름 변경`}
+                      title="이름 변경"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      type="button"
+                      className="app-session-action-btn delete"
+                      onClick={() => handleDeleteSessionClick(session.id)}
+                      aria-label={`${session.title} 세션 삭제`}
+                      title="세션 삭제"
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="app-sidebar-secondary"
             onClick={handleSidebarCompose}
           >
-            새 질문 작성
+            현재 세션에서 질문 작성
           </button>
 
           {/* <label className="app-sidebar-search-block">
@@ -712,6 +1090,7 @@ export function ChatPage() {
           </label> */}
 
           <div className="app-sidebar-list">
+            <p className="app-sidebar-section-title">현재 세션 질문</p>
             {sidebarPairs.length === 0 ? (
               <p className="app-sidebar-empty">아직 대화가 없습니다.</p>
             ) : (
@@ -923,6 +1302,35 @@ export function ChatPage() {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
+
+      <ConfirmDialog
+        open={showDeleteSessionConfirm}
+        title="이 세션을 삭제할까요?"
+        description="삭제하면 세션의 전체 대화가 함께 제거되며 복구할 수 없습니다."
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={handleDeleteSessionConfirm}
+        onCancel={handleDeleteSessionCancel}
+      />
+
+      <ConfirmDialog
+        open={showRenameSessionConfirm}
+        title="세션 이름 변경"
+        description="대화 이름을 입력해 주세요."
+        confirmText="저장"
+        cancelText="취소"
+        onConfirm={handleRenameSessionConfirm}
+        onCancel={handleRenameSessionCancel}
+      >
+        <input
+          type="text"
+          className="confirm-input"
+          value={renameSessionDraft}
+          onChange={(event) => setRenameSessionDraft(event.target.value)}
+          maxLength={50}
+          placeholder="세션 이름"
+        />
+      </ConfirmDialog>
 
       {/* 이미지 미리보기 모달 */}
       <ImagePreviewModal url={previewUrl} onClose={() => setPreviewUrl(null)} />

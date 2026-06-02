@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import type { ReactNode } from 'react'
 import './ConfirmDialog.css'
 
 type ConfirmDialogProps = {
@@ -7,6 +8,7 @@ type ConfirmDialogProps = {
   description: string
   confirmText?: string
   cancelText?: string
+  children?: ReactNode
   onConfirm: () => void
   onCancel: () => void
 }
@@ -17,6 +19,7 @@ export function ConfirmDialog({
   description,
   confirmText = '중지',
   cancelText = '취소',
+  children,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -47,6 +50,7 @@ export function ConfirmDialog({
       >
         <h3 id="confirm-dialog-title">{title}</h3>
         <p id="confirm-dialog-desc">{description}</p>
+        {children}
 
         <div className="confirm-actions">
           <button type="button" className="confirm-cancel" onClick={onCancel}>

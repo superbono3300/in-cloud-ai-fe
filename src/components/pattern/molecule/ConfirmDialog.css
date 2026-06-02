@@ -32,6 +32,23 @@
   color: #475569;
 }
 
+.confirm-dialog .confirm-input {
+  width: 100%;
+  margin-top: 0.72rem;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  padding: 0.58rem 0.68rem;
+  font-size: 0.88rem;
+}
+
+.confirm-dialog .confirm-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
 .confirm-actions {
   margin-top: 1rem;
   display: flex;
@@ -86,6 +103,12 @@
 
 :root[data-theme='dark'] .confirm-dialog p {
   color: #94a3b8;
+}
+
+:root[data-theme='dark'] .confirm-dialog .confirm-input {
+  border-color: rgba(148, 163, 184, 0.42);
+  background: rgba(15, 23, 42, 0.74);
+  color: #e2e8f0;
 }
 
 :root[data-theme='dark'] .confirm-cancel {
