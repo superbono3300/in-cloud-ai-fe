@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEventHandler } from 'react'
 import '../App.css'
-import { MODELS } from '../config/models'
-import { useChat } from '../hooks'
+import { useChat, useModels } from '../hooks'
 import type { ChatMessage } from '../hooks'
 import { ModelSelector } from '../components/pattern/atom/ModelSelector'
 import { MessageInput } from '../components/pattern/atom/MessageInput'
@@ -351,10 +350,11 @@ export function ChatPage() {
 
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
+  const { models, loading: modelsLoading } = useModels()
   const [selectedModelIndex, setSelectedModelIndex] = useState(() => {
-    const savedIndex = persistedChatState?.selectedModelIndex ?? 0
-    return Math.min(Math.max(savedIndex, 0), MODELS.length - 1)
+    return Math.max(persistedChatState?.selectedModelIndex ?? 0, 0)
   })
+  const safeModelIndex = models.length > 0 ? Math.min(selectedModelIndex, models.length - 1) : 0
   const [systemPrompt] = useState('당신은 아이엔소프트 AI 도우미입니다.')
   const [input, setInput] = useState('')
   const [stoppedPairIndexes, setStoppedPairIndexes] = useState<number[]>(() => activeSession?.stoppedPairIndexes ?? [])
@@ -388,7 +388,7 @@ export function ChatPage() {
   const prevActiveSessionIdRef = useRef<string | null>(null)
   const skipSessionSyncRef = useRef(false)
 
-  const selectedModel = MODELS[selectedModelIndex]
+  const selectedModel = models[safeModelIndex] ?? { apiBase: '', apiKey: '', model: '', headers: {} }
   const { messages, loading, error, sendMessage, resumePair, stopGeneration, deletePair, setMessages } = useChat(selectedModel, {
     systemPrompt,
     initialMessages: activeSession?.messages ?? [],
@@ -1169,9 +1169,10 @@ export function ChatPage() {
       <form className="chat-form" onSubmit={handleSubmit}>
         <div>
           <ModelSelector
-            value={selectedModelIndex}
+            value={safeModelIndex}
             onChange={setSelectedModelIndex}
-            models={MODELS}
+            models={models}
+            loading={modelsLoading}
           />
         </div>
 
